@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+mccabe = "*"
+flake8 = "*"
+
+[packages]
+django = "*"
+django-environ = "*"
+psycopg2 = "*"
+celery = "*"
+django-celery-results = "*"
+
