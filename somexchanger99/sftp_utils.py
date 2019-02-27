@@ -8,17 +8,18 @@ from paramiko.transport import Transport
 logger = logging.getLogger(__name__)
 
 
-class FtpUtils(object):
-    __transport = Transport(
-        (settings.SFTP_CONF['host'], int(settings.SFTP_CONF['port']))
-    )
-    __transport.connect(
-        None, settings.SFTP_CONF['username'], settings.SFTP_CONF['password']
-    )
+class SftpUtils(object):
 
-    _client = SFTPClient.from_transport(__transport)
+    def __init__(self):
+        self.__transport = Transport(
+            (settings.SFTP_CONF['host'], int(settings.SFTP_CONF['port']))
+        )
+        self.__transport.connect(
+            None, settings.SFTP_CONF['username'], settings.SFTP_CONF['password']
+        )
+        self._client = SFTPClient.from_transport(self.__transport)
 
-    _base_remote_dir = settings.SFTP_CONF['base_dir']
+        self._base_remote_dir = settings.SFTP_CONF['base_dir']
 
     def upload_file(self, content_file, file_name, remote_path):
         '''
