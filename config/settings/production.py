@@ -10,6 +10,6 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
-ERP_CONF = env.dict('ERP_CONF')
+ERP_CONF = env.json('ERP_CONF')
 
-SFTP_CONF = env.dict('SFTP_CONF')
+SFTP_CONF = env.json('SFTP_CONF')

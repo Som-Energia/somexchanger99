@@ -1,7 +1,10 @@
+import logging
 from operator import itemgetter
 
 from django.conf import settings
 from erppeek import Client
+
+logger = logging.getLogger(__name__)
 
 
 class ErpUtils(object):
@@ -35,6 +38,20 @@ class ErpUtils(object):
         )
 
         return attachments if not step else self.__step_filter(attachments, step)
+
+    def get_sftp_providers(self):
+        Provider = self._client.model('tg.comer.provider')
+        TgSFTP = self._client.model('tg.sftp')
+        provider_ids = Provider.search([])
+
+        providers = Provider.read(provider_ids)
+
+        return [
+            dict(
+                list(TgSFTP.read(provider['sftp'][0]).items()) + [('f5d_syntax', provider['f5d_syntax'])]
+            )
+            for provider in providers if provider['enabled'] and provider['f5d_enabled']
+        ]
 
     def _get_objects_with_attachment(self, model, date, **kwargs):
         Model = self._client.model(model)
