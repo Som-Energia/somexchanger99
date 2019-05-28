@@ -39,34 +39,19 @@ class ErpUtils(object):
 
         return attachments if not step else self.__step_filter(attachments, step)
 
-    def get_f5d_curves(self):
+    def get_sftp_providers(self):
         Provider = self._client.model('tg.comer.provider')
+        TgSFTP = self._client.model('tg.sftp')
         provider_ids = Provider.search([])
 
-        fields_to_read = [
-            'name',
-            'enabled',
-            'sftp',
+        providers = Provider.read(provider_ids)
+
+        return [
+            dict(
+                list(TgSFTP.read(provider['sftp'][0]).items()) + [('f5d_syntax', provider['f5d_syntax'])]
+            )
+            for provider in providers if provider['enabled'] and provider['f5d_enabled']
         ]
-
-        for id_ in provider_ids:
-            provider = Provider.read(id_, fields_to_read)
-        if provider['enabled']:
-            self.__download_provider_data(provider)
-
-    def __download_provider_data(self, provider):
-        TgSFTP = self._client.model('tg.sftp')
-        dirs_to_read = []
-
-        try:
-            # Get required sftp server info
-            sftp_id = provider.get('sftp', [None])[0]
-            sftpcon = TgSFTP.login(sftp_id)
-            sftp_url = TgSFTP.read(sftp_id, 'host')
-            dirs_to_read = sftpcon.get_read_dirs()
-        except Exception as exc:
-            logger.exception(exc)
-            raise exc
 
     def _get_objects_with_attachment(self, model, date, **kwargs):
         Model = self._client.model(model)

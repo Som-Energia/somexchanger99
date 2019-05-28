@@ -1,5 +1,9 @@
 import logging
 import os
+import re
+import stat
+from datetime import datetime as dt
+from datetime import timedelta
 
 from django.conf import settings
 from paramiko.sftp_client import SFTPClient
@@ -10,16 +14,16 @@ logger = logging.getLogger(__name__)
 
 class SftpUtils(object):
 
-    def __init__(self):
+    def __init__(self, host, port, username, password, base_dir):
         self.__transport = Transport(
-            (settings.SFTP_CONF['host'], int(settings.SFTP_CONF['port']))
+            (host, int(port))
         )
         self.__transport.connect(
-            None, settings.SFTP_CONF['username'], settings.SFTP_CONF['password']
+            None, username, password
         )
         self._client = SFTPClient.from_transport(self.__transport)
 
-        self._base_remote_dir = settings.SFTP_CONF['base_dir']
+        self._base_remote_dir = base_dir
 
     def upload_file(self, content_file, file_name, remote_path):
         '''
@@ -39,6 +43,36 @@ class SftpUtils(object):
             )
             raise e
         return os.path.join(remote_path, file_name)
+
+    def download_file_content(self, path):
+        with self._client.open(path) as f:
+            content = f.read()
+
+        return content
+
+    def get_files_to_download(self, path, pattern, date):
+
+        file_list = []
+        try:
+            for file_ in self._client.listdir_attr(path):
+                if stat.S_ISDIR(file_.st_mode):
+                    new_path = os.path.join(path, file_.filename)
+                    file_list = file_list + self.get_files_to_download(new_path, pattern, date)
+
+                match_file = re.match(pattern, file_.filename) and \
+                    dt.fromtimestamp(file_.st_mtime) >= date
+                if match_file:
+                    file_list.append(
+                        (os.path.join(path, file_.filename), file_.filename)
+                    )
+        except FileNotFoundError:
+            logger.error("Path %s not found", path)
+        except Exception as e:
+            msg = "An uncontroled error happened getting files to download, "\
+                  "reason: %s"
+            logger.exception(msg, str(e))
+        finally:
+            return file_list
 
     def close_conection(self):
         if self._client is not None:

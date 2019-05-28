@@ -1,6 +1,6 @@
 import base64
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from celery.utils.log import get_task_logger
@@ -65,11 +65,11 @@ def send_attachments(sftp, object_attachment):
 
 
 @celery_app.task(ignore_result=False)
-def exchange_files():
+def exchange_xmls():
     '''
     Main task in charge to exchange erp attachments
     '''
-    sftp = SftpUtils()
+    sftp = SftpUtils(**settings.SFTP_CONF)
     today = str(datetime.now().date())
     attachments_result = [
         get_attachments(
@@ -83,3 +83,56 @@ def exchange_files():
 
     [send_attachments(sftp, attachment) for attachment in attachments_result]
     sftp.close_conection()
+
+
+@celery_app.task(ignore_result=False)
+def exchange_f5ds():
+    '''
+    Pricipal task for exchange f5ds curves with an SFTP
+    '''
+    try:
+        pattern = 'f5d_syntax'
+        from_date = datetime.now() - timedelta(days=1)
+        erp_utils = ErpUtils()
+
+        neuro_sftp = SftpUtils(
+            host=settings.SFTP_CONF['host'],
+            port=settings.SFTP_CONF['port'],
+            username=settings.SFTP_CONF['username'],
+            password=settings.SFTP_CONF['password'],
+            base_dir='f5ds'
+        )
+
+        providers_sftp = erp_utils.get_sftp_providers()
+        for provider in providers_sftp:
+            logger.info("Getting curves from %s", provider['host'])
+            try:
+                sftp = SftpUtils(
+                    host=provider['host'],
+                    port=provider['port'],
+                    username=provider['user'],
+                    password=provider['password'],
+                    base_dir=provider['root_dir']
+                )
+                files_to_exchange = sftp.get_files_to_download(
+                    provider['root_dir'], provider[pattern], from_date
+                )
+                for path, filename in files_to_exchange:
+                    content_file = sftp.download_file_content(path)
+                    logger.info("Uploading file %s to exchange sftp", filename)
+                    neuro_sftp.upload_file(
+                        content_file,
+                        filename,
+                        os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+                    )
+                sftp.close_conection()
+            except Exception as e:
+                msg = "An uncontroled error happened during uploading "\
+                      "process, reason: %s"
+                logger.exception(msg, str(e))
+            finally:
+                sftp.close_conection()
+    except Exception as e:
+        logger.exception("An uncontroled error happened, reason: %s", str(e))
+    finally:
+        neuro_sftp.close_conection()
