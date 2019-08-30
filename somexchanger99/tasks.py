@@ -1,5 +1,6 @@
 import base64
 import os
+
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -136,3 +137,28 @@ def exchange_f5ds():
         logger.exception("An uncontroled error happened, reason: %s", str(e))
     finally:
         neuro_sftp.close_conection()
+
+@celery_app.task(ignore_result=False)
+def exchange_meteologica():
+    '''
+    Pricipal task for exchange meteologica API
+    '''
+    try: 
+        logger.info("Connecting to meteologica API")
+        meteologica = MeteologicaApiUtils(
+            wsdl=settings.METEOLOGICA_CONF['wsdl'],
+            username=settings.METEOLOGICA_CONF['username'],
+            password=settings.METEOLOGICA_CONF['password'],
+        )
+        try:
+            logger.info("Loading production curves from file %s", settings.METEOLOGICA_CONF['file'])
+            meteologica.upload_to_api(settings.METEOLOGICA_CONF['file'])
+        except Exception as e:
+            msg = "An uncontroled error happened during loading "\
+                    "process, reason: %s"
+            logger.exception(msg, str(e))
+
+    except Exception as e:
+        logger.exception("An uncontroled error happened, reason: %s", str(e))
+    finally:
+        meteologica.close_conection()
