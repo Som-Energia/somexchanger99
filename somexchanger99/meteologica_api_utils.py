@@ -18,7 +18,7 @@ from requests import Session
 logger = logging.getLogger(__name__)
 
 
-class MeteologicaApi(object):
+class MeteologicaApi_Mock(object):
     def __init__(self):
         self._data = {}
 
@@ -31,6 +31,9 @@ class MeteologicaApi(object):
         if not facility_data: return None
         return max(data for data, measure in facility_data)
 
+
+class MeteologicaApi(MeteologicaApi_Mock):
+    ''
 
 class MeteologicaApiUtils(object):
 

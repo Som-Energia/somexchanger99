@@ -1,14 +1,14 @@
-from .meteologica_api_utils import MeteologicaApi
+from .meteologica_api_utils import (
+    MeteologicaApi_Mock,
+    MeteologicaApi,
+)
 from unittest.mock import patch
 import unittest
 
-class MeteologicaApi_Test(unittest.TestCase):
-
-    def setUp(self):
-        self.config = dict()
+class MeteologicaApiMock_Test(unittest.TestCase):
 
     def createApi(self):
-        return MeteologicaApi(**self.config)
+        return MeteologicaApi_Mock()
 
     def test_uploadProduction_singleData(self):
         facility = "MyPlant"
@@ -67,9 +67,10 @@ class MeteologicaApi_Test(unittest.TestCase):
         )
 
 
+class MeteologicaApi_Test(MeteologicaApiMock_Test):
 
-
-
+    def createApi(self):
+        return MeteologicaApi()
 
 
 
