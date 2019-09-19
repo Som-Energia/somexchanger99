@@ -9,7 +9,9 @@ from celery.utils.log import get_task_logger
 from config import celery_app
 from .erp_utils import ErpUtils
 from .sftp_utils import SftpUtils
+from .meteologica_api_utils import MeteologicaApiUtils
 from .models import File2Exchange
+
 
 
 logger = get_task_logger(__name__)
@@ -152,7 +154,7 @@ def exchange_meteologica():
         )
         try:
             logger.info("Loading production curves from file %s", settings.METEOLOGICA_CONF['file'])
-            meteologica.upload_to_api(settings.METEOLOGICA_CONF['file'])
+            return meteologica.upload_to_api(settings.METEOLOGICA_CONF['file'])
         except Exception as e:
             msg = "An uncontroled error happened during loading "\
                     "process, reason: %s"

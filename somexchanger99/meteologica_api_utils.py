@@ -18,6 +18,20 @@ from requests import Session
 logger = logging.getLogger(__name__)
 
 
+class MeteologicaApi(object):
+    def __init__(self):
+        self._data = {}
+
+    def uploadProduction(self, facility, data):
+        facility_data = self._data.setdefault(facility, [])
+        facility_data += data
+
+    def lastDateUploaded(self, facility):
+        facility_data = self._data.get(facility, [])
+        if not facility_data: return None
+        return max(data for data, measure in facility_data)
+
+
 class MeteologicaApiUtils(object):
 
     def __init__(self, wsdl, username, password):
@@ -25,8 +39,9 @@ class MeteologicaApiUtils(object):
         self.__username = username
         self.__password = password
         self._client = Client(wsdl)
-        self.__data_login = {'username' : self.__username, 'password' : self.__password}
+        self.__data_login = {'username': self.__username, 'password': self.__password}
         self._api_session = self._client.service.login(self.__data_login)
+        logger.info("Sesion information %s", self._api_session.header)
 
     def upload_to_api(self, file_name):
         '''
@@ -39,7 +54,7 @@ class MeteologicaApiUtils(object):
                 facilityId_val = row[1]
                 startTime_val = row[2]
                 data_val = row[5]
-                naive = dt.datetime.strptime(startTime_val, "%Y-%m-%d %H:%M:%S")
+                naive = dt.strptime(startTime_val, "%Y-%m-%d %H:%M:%S")
                 local_dt = local.localize(naive, is_dst=None)
                 utc_dt = local_dt.astimezone(pytz.utc)
                 startTime_val = utc_dt.strftime ("%Y-%m-%d %H:%M:%S")
@@ -59,10 +74,14 @@ class MeteologicaApiUtils(object):
                                         'variableId': 'prod',
                                         'measurementType': 'CUMULATIVE',
                                         'measurementTime': 60,
-                                        'unit': 'kw', 
+                                        'unit': 'kW',
                                         'observationData': observationData
                                     }
-                    self._client.service.setObservation(data_observation)
+                    logger.info("Sending data: %s", data_observation)
+                    resp_data = self._client.service.setObservation(data_observation)
+                    logger.info("Response from API: %s", resp_data)
+                    if resp_data.header['sessionToken'] != self._api_session.header['sessionToken']:
+                        self._api_session.header['sessionToken'] = resp_data.header['sessionToken']
                 
                 except Exception as e:
                         msg = "An uncontroled error happened during uploading "\
