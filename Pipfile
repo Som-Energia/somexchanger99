@@ -7,6 +7,9 @@ verify_ssl = true
 ipython = "*"
 mccabe = "*"
 flake8 = "*"
+pylint = "*"
+nose = "*"
+rednose = "*"
 
 [packages]
 Django = ">=2.2,<=3.0"
