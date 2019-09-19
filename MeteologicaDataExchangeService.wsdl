@@ -1,0 +1,719 @@
+<?xml version="1.0"?>
+<definitions name="MeteologicaDataExchangeService" targetNamespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xsd:schema targetNamespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php">
+
+<xsd:simpleType name="APIErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="INTERNAL_ERROR"/>
+		<xsd:enumeration value="EXCEEDED_THROTTLE"/>
+		<xsd:enumeration value="USER_NOT_SUBSCRIBED_TO_PRODUCT"/>
+		<xsd:enumeration value="SUBSCRIPTION_INACTIVE_OR_SUSPENDED"/>
+		<xsd:enumeration value="NO_SESSION"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="LoginErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_USERNAME_OR_PASSWORD"/>
+		<xsd:enumeration value="LOGIN_UNAUTHORIZED"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="LogoutErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="KeepAliveErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetAllFacilitiesErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetAllFacilitiesSPEErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="NO_FACILITIES_FOUND"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetFacilityForecastedVnPErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetFacilityForecastedVnPEnsembleErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetFacilityForecastedVarSPEErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetForecastErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+		<xsd:enumeration value="INVALID_VARIABLE_ID"/>
+		<xsd:enumeration value="INVALID_PREDICTOR_ID"/>
+		<xsd:enumeration value="INVALID_FORECASTDATE"/>
+		<xsd:enumeration value="INVALID_FROMDATE"/>
+		<xsd:enumeration value="INVALID_TODATE"/>
+		<xsd:enumeration value="INVALID_GRANULARITY"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetForecastSPEErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+		<xsd:enumeration value="INVALID_VARIABLE_ID"/>
+		<xsd:enumeration value="INVALID_FORECASTDATE"/>
+		<xsd:enumeration value="INVALID_FROMDATE"/>
+		<xsd:enumeration value="INVALID_TODATE"/>
+		<xsd:enumeration value="INVALID_GRANULARITY"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="GetFacilityOVErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="SetObservationErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+		<xsd:enumeration value="INVALID_VARIABLE_ID"/>
+		<xsd:enumeration value="INVALID_MEASUREMENT_TYPE"/>
+		<xsd:enumeration value="INVALID_MEASUREMENT_TIME"/>
+		<xsd:enumeration value="INVALID_STARTDATE"/>
+		<xsd:enumeration value="INVALID_UNIT"/>
+		<xsd:enumeration value="INVALID_DATA"/>
+		<xsd:enumeration value="INVALID_OBSERVATION_TYPE"/>
+	</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="SetAvailabilityErrorEnum">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="OK"/>
+		<xsd:enumeration value="API_ERROR"/>
+		<xsd:enumeration value="INVALID_FACILITY_ID"/>
+		<xsd:enumeration value="INVALID_DATA"/>
+		<xsd:enumeration value="INVALID_FROMDATE"/>
+		<xsd:enumeration value="INVALID_TODATE"/>
+		<xsd:enumeration value="INVALID_LIMITATION_TYPE"/>
+		<xsd:enumeration value="INVALID_UNIT"/>
+	</xsd:restriction>
+</xsd:simpleType>
+      <xsd:complexType name="LoginReq">
+        <xsd:all>
+          <xsd:element name="username" type="xsd:string"/>
+          <xsd:element name="password" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="APIResponseHeader">
+        <xsd:all>
+          <xsd:element name="sessionToken" type="xsd:string"/>
+          <xsd:element name="errorCode" type="tns:APIErrorEnum"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="LoginResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:LoginErrorEnum"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="APIRequestHeader">
+        <xsd:all>
+          <xsd:element name="sessionToken" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="LogoutReq">
+        <xsd:all>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="LogoutResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:LogoutErrorEnum"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="KeepAliveReq">
+        <xsd:all>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="KeepAliveResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:KeepAliveErrorEnum"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetAllFacilitiesReq">
+        <xsd:all>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="Facility">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="facilityName" type="xsd:string"/>
+          <xsd:element name="installedCapacity" type="xsd:int" nillable="true" />
+          <xsd:element name="lat" type="xsd:float" nillable="true" />
+          <xsd:element name="long" type="xsd:float" nillable="true" />
+          <xsd:element name="timezone" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ArrayOfFacility">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" name="item" type="tns:Facility"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetAllFacilitiesResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetAllFacilitiesErrorEnum"/>
+          <xsd:element name="facilityItems" type="tns:ArrayOfFacility"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetAllFacilitiesSPEReq">
+        <xsd:all>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="FacilitySPE">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="facilityName" type="xsd:string"/>
+          <xsd:element name="lat" type="xsd:float"/>
+          <xsd:element name="long" type="xsd:float"/>
+          <xsd:element name="timezone" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ArrayOfFacilityspe">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" name="item" type="tns:FacilitySPE"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetAllFacilitiesSPEResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetAllFacilitiesSPEErrorEnum"/>
+          <xsd:element name="facilityItems" type="tns:ArrayOfFacilityspe"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+
+      <xsd:complexType name="GetFacilityForecastedVnPReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="VnP">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="variableId" type="xsd:string"/>
+          <xsd:element name="predictorId" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ArrayOfVnp">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" name="item" type="tns:VnP"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetFacilityForecastedVnPResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetFacilityForecastedVnPErrorEnum"/>
+          <xsd:element name="vnps" type="tns:ArrayOfVnp"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+
+
+      <xsd:complexType name="GetFacilityForecastedVnPEnsembleReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetFacilityForecastedVnPEnsembleResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetFacilityForecastedVnPEnsembleErrorEnum"/>
+          <xsd:element name="vnps" type="tns:ArrayOfVnp"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+
+      <xsd:complexType name="GetFacilityForecastedVarSPEReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="SPEvar">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="variableId" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ArrayOfSpevar">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" name="item" type="tns:SPEvar"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetFacilityForecastedVarSPEResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetFacilityForecastedVarSPEErrorEnum"/>
+          <xsd:element name="SPEvars" type="tns:ArrayOfSpevar"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetForecastReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="variableId" type="xsd:string"/>
+          <xsd:element name="predictorId" type="xsd:string"/>
+          <xsd:element name="fromDate" type="xsd:dateTime" nillable="true"/>
+          <xsd:element name="toDate" type="xsd:dateTime" nillable="true"/>
+          <xsd:element name="forecastDate" type="xsd:dateTime" nillable="true"/>
+          <xsd:element name="granularity" type="xsd:string" nillable="true"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetForecastResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetForecastErrorEnum"/>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="variableId" type="xsd:string"/>
+          <xsd:element name="predictorId" type="xsd:string"/>
+          <xsd:element name="forecastDate" type="xsd:string"/>
+          <xsd:element name="granularity" type="xsd:string"/>
+          <xsd:element name="forecastData" type="xsd:string"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetForecastSPEReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="variableId" type="xsd:string"/>
+          <xsd:element name="fromDate" type="xsd:dateTime" nillable="true"/>
+          <xsd:element name="toDate" type="xsd:dateTime" nillable="true"/>
+          <xsd:element name="forecastDate" type="xsd:dateTime" nillable="true"/>
+          <xsd:element name="granularity" nillable="true" type="xsd:string"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetForecastSPEResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetForecastSPEErrorEnum"/>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="variableId" type="xsd:string"/>
+          <xsd:element name="unitMeasure" type="xsd:string"/>
+          <xsd:element name="forecastDate" type="xsd:string"/>
+          <xsd:element name="forecastData" type="xsd:string"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="GetFacilityOVReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ObsVar">
+        <xsd:all>
+          <xsd:element name="variableId" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ArrayOfObsvar">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" name="item" type="tns:ObsVar"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="GetFacilityOVResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:GetFacilityOVErrorEnum"/>
+          <xsd:element name="obsVariables" type="tns:ArrayOfObsvar"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ObsData">
+        <xsd:all>
+          <xsd:element name="startTime" type="xsd:dateTime"/>
+          <xsd:element name="data" type="xsd:float"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ArrayOfObsdata">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" name="item" type="tns:ObsData"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="SetObservationReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="variableId" type="xsd:string"/>
+          <xsd:element name="measurementType" type="xsd:string"/>
+          <xsd:element name="measurementTime" type="xsd:int" nillable="true"/>
+          <xsd:element name="unit" type="xsd:string" nillable="true"/>
+          <xsd:element name="observationType" nillable="true" type="xsd:string"/>
+          <xsd:element name="observationData" type="tns:ArrayOfObsdata"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="SetObservationResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:SetObservationErrorEnum"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="SetAvailabilityReq">
+        <xsd:all>
+          <xsd:element name="facilityId" type="xsd:string"/>
+          <xsd:element name="fromDate" type="xsd:dateTime"/>
+          <xsd:element name="toDate" type="xsd:dateTime"/>
+          <xsd:element name="limitationType" type="xsd:string"/>
+          <xsd:element name="unit" type="xsd:string" nillable="true"/>
+          <xsd:element name="availability" type="xsd:float"/>
+          <xsd:element name="header" type="tns:APIRequestHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="SetAvailabilityResp">
+        <xsd:all>
+          <xsd:element name="errorCode" type="tns:SetAvailabilityErrorEnum"/>
+          <xsd:element name="header" type="tns:APIResponseHeader"/>
+        </xsd:all>
+      </xsd:complexType>
+    </xsd:schema>
+  </types>
+  <portType name="MeteologicaDataExchangeServicePort">
+    <operation name="login">
+      <documentation>login</documentation>
+      <input message="tns:loginIn"/>
+      <output message="tns:loginOut"/>
+    </operation>
+    <operation name="logout">
+      <documentation>logout</documentation>
+      <input message="tns:logoutIn"/>
+      <output message="tns:logoutOut"/>
+    </operation>
+    <operation name="keepAlive">
+      <documentation>keepAlive</documentation>
+      <input message="tns:keepAliveIn"/>
+      <output message="tns:keepAliveOut"/>
+    </operation>
+    <operation name="getAllFacilities">
+      <documentation>getAllFacilities</documentation>
+      <input message="tns:getAllFacilitiesIn"/>
+      <output message="tns:getAllFacilitiesOut"/>
+    </operation>
+    <operation name="getAllFacilitiesSPE">
+      <documentation>getAllFacilitiesSPE</documentation>
+      <input message="tns:getAllFacilitiesSPEIn"/>
+      <output message="tns:getAllFacilitiesSPEOut"/>
+    </operation>
+    <operation name="getFacilityForecastedVnP">
+      <documentation>getFacilityForecastedVnP</documentation>
+      <input message="tns:getFacilityForecastedVnPIn"/>
+      <output message="tns:getFacilityForecastedVnPOut"/>
+    </operation>
+    <operation name="getFacilityForecastedVnPEnsemble">
+      <documentation>getFacilityForecastedVnPEnsemble</documentation>
+      <input message="tns:getFacilityForecastedVnPEnsembleIn"/>
+      <output message="tns:getFacilityForecastedVnPEnsembleOut"/>
+    </operation>
+    <operation name="getFacilityForecastedVarSPE">
+      <documentation>getFacilityForecastedVarSPE</documentation>
+      <input message="tns:getFacilityForecastedVarSPEIn"/>
+      <output message="tns:getFacilityForecastedVarSPEOut"/>
+    </operation>
+    <operation name="getForecast">
+      <documentation>getForecast</documentation>
+      <input message="tns:getForecastIn"/>
+      <output message="tns:getForecastOut"/>
+    </operation>
+    <operation name="getForecastP5P95">
+      <documentation>getForecastP5P95</documentation>
+      <input message="tns:getForecastP5P95In"/>
+      <output message="tns:getForecastP5P95Out"/>
+    </operation>
+    <operation name="getForecastEnsemble">
+      <documentation>getForecastEnsemble</documentation>
+      <input message="tns:getForecastEnsembleIn"/>
+      <output message="tns:getForecastEnsembleOut"/>
+    </operation>
+    <operation name="getForecastSPE">
+      <documentation>getForecastSPE</documentation>
+      <input message="tns:getForecastSPEIn"/>
+      <output message="tns:getForecastSPEOut"/>
+    </operation>
+    <operation name="getFacilityOV">
+      <documentation>getFacilityOV</documentation>
+      <input message="tns:getFacilityOVIn"/>
+      <output message="tns:getFacilityOVOut"/>
+    </operation>
+    <operation name="setObservation">
+      <documentation>setObservation</documentation>
+      <input message="tns:setObservationIn"/>
+      <output message="tns:setObservationOut"/>
+    </operation>
+    <operation name="setAvailability">
+      <documentation>setAvailability</documentation>
+      <input message="tns:setAvailabilityIn"/>
+      <output message="tns:setAvailabilityOut"/>
+    </operation>
+  </portType>
+  <binding name="MeteologicaDataExchangeServiceBinding" type="tns:MeteologicaDataExchangeServicePort">
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="login">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#login"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="logout">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#logout"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="keepAlive">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#keepAlive"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getAllFacilities">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getAllFacilities"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getAllFacilitiesSPE">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getAllFacilitiesSPE"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getFacilityForecastedVnP">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getFacilityForecastedVnP"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getFacilityForecastedVnPEnsemble">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getFacilityForecastedVnPEnsemble"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getFacilityForecastedVarSPE">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getFacilityForecastedVarSPE"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getForecast">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getForecast"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getForecastP5P95">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getForecastP5P95"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getForecastEnsemble">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getForecastEnsemble"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getForecastSPE">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getForecastSPE"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="getFacilityOV">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#getFacilityOV"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="setObservation">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#setObservation"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+    <operation name="setAvailability">
+      <soap:operation soapAction="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php#setAvailability"/>
+      <input>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </input>
+      <output>
+        <soap:body namespace="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php" use="literal"/>
+      </output>
+    </operation>
+  </binding>
+  <service name="MeteologicaDataExchangeServiceService">
+    <port binding="tns:MeteologicaDataExchangeServiceBinding" name="MeteologicaDataExchangeServicePort">
+      <soap:address location="https://webservice.meteologica.com/api/MeteologicaDataExchangeService.php"/>
+    </port>
+  </service>
+  <message name="loginIn">
+    <part name="request" type="tns:LoginReq"/>
+  </message>
+  <message name="loginOut">
+    <part name="return" type="tns:LoginResp"/>
+  </message>
+  <message name="logoutIn">
+    <part name="request" type="tns:LogoutReq"/>
+  </message>
+  <message name="logoutOut">
+    <part name="return" type="tns:LogoutResp"/>
+  </message>
+  <message name="keepAliveIn">
+    <part name="request" type="tns:KeepAliveReq"/>
+  </message>
+  <message name="keepAliveOut">
+    <part name="return" type="tns:KeepAliveResp"/>
+  </message>
+  <message name="getAllFacilitiesIn">
+    <part name="request" type="tns:GetAllFacilitiesReq"/>
+  </message>
+  <message name="getAllFacilitiesOut">
+    <part name="return" type="tns:GetAllFacilitiesResp"/>
+  </message>
+  <message name="getAllFacilitiesSPEIn">
+    <part name="request" type="tns:GetAllFacilitiesSPEReq"/>
+  </message>
+  <message name="getAllFacilitiesSPEOut">
+    <part name="return" type="tns:GetAllFacilitiesSPEResp"/>
+  </message>
+  <message name="getFacilityForecastedVnPIn">
+    <part name="request" type="tns:GetFacilityForecastedVnPReq"/>
+  </message>
+  <message name="getFacilityForecastedVnPOut">
+    <part name="return" type="tns:GetFacilityForecastedVnPResp"/>
+  </message>
+  <message name="getFacilityForecastedVnPEnsembleIn">
+    <part name="request" type="tns:GetFacilityForecastedVnPEnsembleReq"/>
+  </message>
+  <message name="getFacilityForecastedVnPEnsembleOut">
+    <part name="return" type="tns:GetFacilityForecastedVnPEnsembleResp"/>
+  </message>
+  <message name="getFacilityForecastedVarSPEIn">
+    <part name="request" type="tns:GetFacilityForecastedVarSPEReq"/>
+  </message>
+  <message name="getFacilityForecastedVarSPEOut">
+    <part name="return" type="tns:GetFacilityForecastedVarSPEResp"/>
+  </message>
+  <message name="getForecastIn">
+    <part name="request" type="tns:GetForecastReq"/>
+  </message>
+  <message name="getForecastOut">
+    <part name="return" type="tns:GetForecastResp"/>
+  </message>
+  <message name="getForecastP5P95In">
+    <part name="request" type="tns:GetForecastReq"/>
+  </message>
+  <message name="getForecastP5P95Out">
+    <part name="return" type="tns:GetForecastResp"/>
+  </message>
+  <message name="getForecastEnsembleIn">
+    <part name="request" type="tns:GetForecastReq"/>
+  </message>
+  <message name="getForecastEnsembleOut">
+    <part name="return" type="tns:GetForecastResp"/>
+  </message>
+  <message name="getForecastSPEIn">
+    <part name="request" type="tns:GetForecastSPEReq"/>
+  </message>
+  <message name="getForecastSPEOut">
+    <part name="return" type="tns:GetForecastSPEResp"/>
+  </message>
+  <message name="getFacilityOVIn">
+    <part name="request" type="tns:GetFacilityOVReq"/>
+  </message>
+  <message name="getFacilityOVOut">
+    <part name="return" type="tns:GetFacilityOVResp"/>
+  </message>
+  <message name="setObservationIn">
+    <part name="request" type="tns:SetObservationReq"/>
+  </message>
+  <message name="setObservationOut">
+    <part name="return" type="tns:SetObservationResp"/>
+  </message>
+  <message name="setAvailabilityIn">
+    <part name="request" type="tns:SetAvailabilityReq"/>
+  </message>
+  <message name="setAvailabilityOut">
+    <part name="return" type="tns:SetAvailabilityResp"/>
+  </message>
+</definitions>
