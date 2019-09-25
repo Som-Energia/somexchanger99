@@ -123,6 +123,7 @@ class MeteologicaApiMock_Test(unittest.TestCase):
 
 
 from django.conf import settings
+from pathlib import Path
 
 class MeteologicaApi_Test(MeteologicaApiMock_Test):
 
@@ -131,7 +132,17 @@ class MeteologicaApi_Test(MeteologicaApiMock_Test):
             wsdl=settings.METEOLOGICA_CONF['wsdl'],
             username=settings.METEOLOGICA_CONF['username'],
             password=settings.METEOLOGICA_CONF['password'],
+            lastDateFile='lastDateFile.yaml',
         )
+    def setUp(self):
+        self.cleanLastDateFile()
+
+    def tearDown(self):
+        self.cleanLastDateFile()
+
+    def cleanLastDateFile(self):
+        f = Path('lastDateFile.yaml')
+        if f.exists(): f.unlink()
 
     def mainFacility(self):
         return "SomEnergia_Fontivsolar"
@@ -139,7 +150,7 @@ class MeteologicaApi_Test(MeteologicaApiMock_Test):
     def otherFacility(slf):
         return "SomEnergia_Alcolea"
 
-    @unittest.skip("not yet implemented")
+   
     def test_uploadProduction_lastDateUploadedIsPersistent(self):
         facility = self.mainFacility()
         api = self.createApi()

@@ -4,6 +4,7 @@ import re
 import stat
 import pandas as pd
 import pytz
+from pathlib import Path
 
 from datetime import datetime as dt
 from datetime import timedelta
@@ -68,7 +69,9 @@ class MeteologicaApi_Mock(object):
 class MeteologicaApi:
     def __init__(self, **kwds):
         self._config = ns(kwds)
-        self._lastDates = ns()
+        lastDates = Path(self._config.lastDateFile)
+        if not lastDates.exists():
+            lastDates.write_text("{}")
 
     def _checkFacility(self, facility): pass
 
@@ -101,10 +104,14 @@ class MeteologicaApi:
         self.session.header['sessionToken'] = response.header['sessionToken']
         self.client.service.logout(self.session)
         lastDateOfCurrentBatch = max(date for date, measure in data)
-        self._lastDates[facility] = max(self._lastDates.get(facility,''), lastDateOfCurrentBatch)
+
+        lastDates = ns.load(self._config.lastDateFile)
+        lastDates[facility] = max(lastDates.get(facility,''), lastDateOfCurrentBatch)
+        lastDates.dump(self._config.lastDateFile)
 
     def lastDateUploaded(self, facility):
-        return self._lastDates.get(facility,None)
+        lastDates = ns.load(self._config.lastDateFile)
+        return lastDates.get(facility,None)
 
 
 class MeteologicaApiUtils(object):
