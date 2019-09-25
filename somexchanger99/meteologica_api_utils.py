@@ -15,6 +15,7 @@ from zeep import Client
 from zeep.transports import Transport
 from requests import Session
 from yamlns import namespace as ns
+import decorator
 
 logger = logging.getLogger(__name__)
 
@@ -69,21 +70,47 @@ class MeteologicaApi_Mock(object):
 class MeteologicaApi:
     def __init__(self, **kwds):
         self._config = ns(kwds)
+        self._client = None
+        self._session = None
         lastDates = Path(self._config.lastDateFile)
         if not lastDates.exists():
             lastDates.write_text("{}")
 
     def _checkFacility(self, facility): pass
 
-    def uploadProduction(self, facility, data):
-        self.client = Client(self._config.wsdl)
-        self.session = self.client.service.login(dict(
+    def session(self):
+        return  self._session
+    
+    def __enter__(self):
+        self.login()
+        return self
+
+    def __exit__(self,type,value,traceback):
+        if self.session():
+            self.logout()
+
+    def login(self):
+        self._client = Client(self._config.wsdl)
+        self._session = self._client.service.login(dict(
             username = self._config.username,
             password = self._config.password,
         ))
         if os.environ.get("VERBOSE"): print(self.session)
-        response = self.client.service.setObservation(dict(
-            header = self.session.header,
+
+    @decorator.decorator
+    def withinSession(f, self, *args, **kwds):
+        withinSession = self.session() != None
+        if not withinSession: self.login()
+        try:
+            result = f(self, *args, **kwds)
+        finally:
+            if not withinSession: self.logout()
+        return result
+
+    @withinSession
+    def uploadProduction(self, facility, data):
+        response = self._client.service.setObservation(dict(
+            header = self._session.header,
             facilityId = facility,
             variableId = 'prod',
             measurementType ='CUMULATIVE',
@@ -101,13 +128,17 @@ class MeteologicaApi:
         if response.errorCode != "OK":
             raise MeteologicaApiError(response.errorCode)
 
-        self.session.header['sessionToken'] = response.header['sessionToken']
-        self.client.service.logout(self.session)
+        self._session.header['sessionToken'] = response.header['sessionToken']
         lastDateOfCurrentBatch = max(date for date, measure in data)
 
         lastDates = ns.load(self._config.lastDateFile)
         lastDates[facility] = max(lastDates.get(facility,''), lastDateOfCurrentBatch)
         lastDates.dump(self._config.lastDateFile)
+
+    def logout(self):
+        self._client.service.logout(self._session)
+        self._client = None
+        self._session = None
 
     def lastDateUploaded(self, facility):
         lastDates = ns.load(self._config.lastDateFile)

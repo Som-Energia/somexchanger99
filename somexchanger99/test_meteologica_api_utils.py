@@ -163,6 +163,51 @@ class MeteologicaApi_Test(MeteologicaApiMock_Test):
             "2040-01-01 00:00:00"
         )
 
+    def test_session_unitializedOnConstruction(self):
+        facility = self.mainFacility()
+        api = self.createApi()
+        self.assertFalse(api.session())
+    
+    def test_session_withinContextIsTrue(self):
+        facility = self.mainFacility()
+        api = self.createApi()
+        with api:
+            self.assertTrue(api.session()) 
+
+    def test_session_outsideContextLogout(self):
+        facility = self.mainFacility()
+        api = self.createApi()
+        with api:
+            pass
+        self.assertFalse(api.session()) 
+
+    def test_session_keepSession(self):
+        facility = self.mainFacility()
+        api = self.createApi()
+        with api:
+            session = api.session()
+            api.uploadProduction(facility, [
+                ("2040-01-01 00:00:00", 10),
+            ])
+            self.assertEqual(session, api.session())
+
+    def _test_uploadProduction_multipleWithinASession(self):
+        facility = self.mainFacility()
+        api = self.createApi()
+        self.assertFalse(api._session)
+        with api:
+            session = api._session
+            self.assertTrue(sesison)
+            api.uploadProduction(facility, [
+                ("2040-01-01 00:00:00", 10),
+            ])
+            self.assertEqual(session, api._session)
+            api.uploadProduction(facility, [
+                ("2040-01-02 00:00:00", 20),
+            ])
+            self.assertEqual(session, api._session)
+        self.assertFalse(api._session)
+
 
 
 
