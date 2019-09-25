@@ -76,8 +76,6 @@ class MeteologicaApi:
         if not lastDates.exists():
             lastDates.write_text("{}")
 
-    def _checkFacility(self, facility): pass
-
     def session(self):
         return  self._session
     
@@ -95,7 +93,11 @@ class MeteologicaApi:
             username = self._config.username,
             password = self._config.password,
         ))
-        if os.environ.get("VERBOSE"): print(self.session)
+        if self._showResponses(): print(self._session)
+
+    def _showResponses(self):
+        if self._config.get('showResponses', False): return True
+        return os.environ.get('VERBOSE')
 
     @decorator.decorator
     def withinSession(f, self, *args, **kwds):
@@ -124,13 +126,14 @@ class MeteologicaApi:
                 for startTime, value in data
             ]),
         ))
-        if os.environ.get("VERBOSE"): print(response)
+        if self._showResponses(): print(response)
         if response.errorCode != "OK":
             raise MeteologicaApiError(response.errorCode)
-
+        
+        # TODO session renewal not tested yet
         self._session.header['sessionToken'] = response.header['sessionToken']
-        lastDateOfCurrentBatch = max(date for date, measure in data)
 
+        lastDateOfCurrentBatch = max(date for date, measure in data)
         lastDates = ns.load(self._config.lastDateFile)
         lastDates[facility] = max(lastDates.get(facility,''), lastDateOfCurrentBatch)
         lastDates.dump(self._config.lastDateFile)
