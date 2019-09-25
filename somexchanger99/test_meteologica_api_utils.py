@@ -1,6 +1,7 @@
 from .meteologica_api_utils import (
     MeteologicaApi_Mock,
     MeteologicaApi,
+    MeteologicaApiError,
 )
 from unittest.mock import patch
 import unittest
@@ -12,6 +13,9 @@ class MeteologicaApiMock_Test(unittest.TestCase):
 
     def mainFacility(self):
         return "MyPlant"
+
+    def otherFacility(slf):
+        return "OtherPlant"
 
     def test_uploadProduction_singleData(self):
         facility = self.mainFacility()
@@ -71,17 +75,26 @@ class MeteologicaApiMock_Test(unittest.TestCase):
 
     def test_uploadProduction_otherFacility(self):
         facility = self.mainFacility()
+        otherFacility = self.otherFacility()
         api = self.createApi()
         api.uploadProduction(facility, [
-            ("2200-01-02 00:00:00", 10),
+            ("2040-01-02 00:00:00", 10),
         ])
-        api.uploadProduction("OtherPlant", [
-            ("2200-01-01 00:00:00", 10),
+        api.uploadProduction(otherFacility, [
+            ("2040-01-01 00:00:00", 10),
         ])
         self.assertEqual(
-            api.lastDateUploaded("OtherPlant"),
-            "2200-01-01 00:00:00"
+            api.lastDateUploaded(otherFacility),
+            "2040-01-01 00:00:00"
         )
+
+    def test_uploadProduction_wrongFacility(self):
+        api = self.createApi()
+        with self.assertRaises(MeteologicaApiError) as ctx:
+            api.uploadProduction("WrongPlant", [
+                ("2040-01-01 00:00:00", 10),
+            ])
+        self.assertEqual(type(u'')(ctx.exception), "INVALID_FACILITY_ID")
 
     def test_login_wrongSessionLogin(self):
         api = self.createApi()
@@ -98,6 +111,14 @@ class MeteologicaApiMock_Test(unittest.TestCase):
             login['errorCode'],
             'OK'
         )
+    def _test_uploadProduction_errorUpload(self):
+        api = self.createApi()
+        login = api.login('alberto','1234')
+        facility = self.mainFacility()
+        api.uploadProduction(facility, [
+            ("2040-01-01 00:00:00", 10),
+        ])
+  
 
 
 from django.conf import settings
@@ -113,6 +134,9 @@ class MeteologicaApi_Test(MeteologicaApiMock_Test):
 
     def mainFacility(self):
         return "SomEnergia_Fontivsolar"
+
+    def otherFacility(slf):
+        return "SomEnergia_Alcolea"
 
 
 unittest.TestCase.__str__ = unittest.TestCase.id

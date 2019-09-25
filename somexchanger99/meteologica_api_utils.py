@@ -13,27 +13,95 @@ from django.conf import settings
 from zeep import Client
 from zeep.transports import Transport
 from requests import Session
-
+from yamlns import namespace as ns
 
 logger = logging.getLogger(__name__)
 
+class MeteologicaApiError(Exception): pass
 
 class MeteologicaApi_Mock(object):
     def __init__(self):
         self._data = {}
+        self._session = {}
+        self._login = {}
+        self._response = {}
+        self._validPlants = "MyPlant OtherPlant".split()
+
+    def login(self, username, password):
+        self._login = dict(
+            username = username,
+            password = password,
+        )
+        if self._login['username'] != 'alberto' or self._login['password'] != '1234':
+            self._session = {
+                    'errorCode': 'INVALID_USERNAME_OR_PASSWORD',
+                    'header': {
+                        'sessionToken': None,
+                        'errorCode': 'NO_SESSION'
+                        }
+                    }
+            return self._session
+        else:
+            self._session = {
+                    'errorCode': 'OK',
+                    'header': {
+                    'sessionToken': '73f19a710bbced25fb2e46e5a0d65b126716a8d19bb9f9038d2172adc14665a5f0c65a30e9fb677e5654b2f59f51abdb',
+                    'errorCode': 'OK'
+                        }
+                    }
+            return self._session
 
     def uploadProduction(self, facility, data):
+        self._checkFacility(facility)
         facility_data = self._data.setdefault(facility, [])
         facility_data += data
+
+    def _checkFacility(self, facility):
+        if facility not in self._validPlants:
+            raise MeteologicaApiError("INVALID_FACILITY_ID")
 
     def lastDateUploaded(self, facility):
         facility_data = self._data.get(facility, [])
         if not facility_data: return None
         return max(data for data, measure in facility_data)
 
-
 class MeteologicaApi(MeteologicaApi_Mock):
-    ''
+    def __init__(self, **kwds):
+        super(MeteologicaApi, self).__init__()
+        self._config = ns(kwds)
+
+    def _checkFacility(self, facility): pass
+
+    def uploadProduction(self, facility, data):
+        super(MeteologicaApi, self).uploadProduction(facility, data)
+        client = Client(self._config.wsdl)
+        session = client.service.login(dict(
+            username = self._config.username,
+            password = self._config.password,
+        ))
+        if os.environ.get("VERBOSE"): print(session)
+        response = client.service.setObservation(dict(
+            header = session.header,
+            facilityId = facility,
+            variableId = 'prod',
+            measurementType ='CUMULATIVE',
+            measurementTime = 60, # minutes
+            unit = 'kW',
+            observationData = dict(item=[
+                dict(
+                    startTime = startTime,
+                    data = value,
+                )
+                for startTime, value in data
+            ]),
+        ))
+        if os.environ.get("VERBOSE"): print(response)
+        if response.errorCode != "OK":
+            raise MeteologicaApiError(response.errorCode)
+
+        session.header['sessionToken'] = response.header['sessionToken']
+        client.service.logout(session)
+
 
 class MeteologicaApiUtils(object):
 
