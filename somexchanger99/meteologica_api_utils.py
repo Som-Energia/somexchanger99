@@ -67,6 +67,7 @@ class MeteologicaApi_Mock(object):
         if not facility_data: return None
         return max(date for date, measure in facility_data)
 
+
 class MeteologicaApi:
     def __init__(self, **kwds):
         self._config = ns(kwds)
