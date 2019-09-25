@@ -17,11 +17,11 @@ class MeteologicaApiMock_Test(unittest.TestCase):
         facility = self.mainFacility()
         api = self.createApi()
         api.uploadProduction(facility, [
-            ("2020-01-01 00:00:00", 10),
+            ("2040-01-01 00:00:00", 10),
         ])
         self.assertEqual(
             api.lastDateUploaded(facility),
-            "2020-01-01 00:00:00"
+            "2040-01-01 00:00:00"
         )
 
     def test_uploadProduction_noData(self):
@@ -36,33 +36,33 @@ class MeteologicaApiMock_Test(unittest.TestCase):
         facility = self.mainFacility()
         api = self.createApi()
         api.uploadProduction(facility, [
-            ("2200-01-01 00:00:00", 10),
-            ("2200-01-02 00:00:00", 10),
+            ("2040-01-01 00:00:00", 10),
+            ("2040-01-02 00:00:00", 10),
         ])
         self.assertEqual(
             api.lastDateUploaded(facility),
-            "2200-01-02 00:00:00"
+            "2040-01-02 00:00:00"
         )
 
     def test_uploadProduction_calledTwice(self):
         facility = self.mainFacility()
         api = self.createApi()
         api.uploadProduction(facility, [
-            ("2200-01-02 00:00:00", 10),
+            ("2040-01-02 00:00:00", 10),
         ])
         api.uploadProduction(facility, [
-            ("2200-01-01 00:00:00", 10),
+            ("2040-01-01 00:00:00", 10),
         ])
         self.assertEqual(
             api.lastDateUploaded(facility),
-            "2200-01-02 00:00:00"
+            "2040-01-02 00:00:00"
         )
 
     def test_uploadProduction_doesNotChangeOtherFacility(self):
         facility = self.mainFacility()
         api = self.createApi()
         api.uploadProduction(facility, [
-            ("2200-01-01 00:00:00", 10),
+            ("2040-01-01 00:00:00", 10),
         ])
         self.assertEqual(
             api.lastDateUploaded("OtherPlant"),
