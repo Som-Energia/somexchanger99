@@ -77,7 +77,9 @@ class MeteologicaApi:
             lastDates.write_text("{}")
 
     def session(self):
-        return  self._session
+        if not self._session:
+            return None
+        return  self._session.header['sessionToken']
     
     def __enter__(self):
         self.login()
