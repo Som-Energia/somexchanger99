@@ -89,11 +89,22 @@ class MeteologicaApi:
 
     def login(self):
         self._client = Client(self._config.wsdl)
-        self._session = self._client.service.login(dict(
+        self._session = None
+        
+        response = self._client.service.login(dict(
             username = self._config.username,
             password = self._config.password,
         ))
-        if self._showResponses(): print(self._session)
+        if self._showResponses(): print(response)
+        if response.errorCode != 'OK':
+            raise MeteologicaApiError(response.errorCode)
+        self._session = response
+    
+    def logout(self):
+        response = self._client.service.logout(self._session)
+        if self._showResponses(): print(response)
+        self._client = None
+        self._session = None
 
     def _showResponses(self):
         if self._config.get('showResponses', False): return True
@@ -137,11 +148,6 @@ class MeteologicaApi:
         lastDates = ns.load(self._config.lastDateFile)
         lastDates[facility] = max(lastDates.get(facility,''), lastDateOfCurrentBatch)
         lastDates.dump(self._config.lastDateFile)
-
-    def logout(self):
-        self._client.service.logout(self._session)
-        self._client = None
-        self._session = None
 
     def lastDateUploaded(self, facility):
         lastDates = ns.load(self._config.lastDateFile)

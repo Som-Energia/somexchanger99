@@ -127,13 +127,16 @@ from pathlib import Path
 
 class MeteologicaApi_Test(MeteologicaApiMock_Test):
 
-    def createApi(self):
-        return MeteologicaApi(
+    def createApi(self, **kwds):
+        params=dict(
             wsdl=settings.METEOLOGICA_CONF['wsdl'],
             username=settings.METEOLOGICA_CONF['username'],
             password=settings.METEOLOGICA_CONF['password'],
             lastDateFile='lastDateFile.yaml',
         )
+        params.update(kwds)
+        return MeteologicaApi(**params)
+
     def setUp(self):
         self.cleanLastDateFile()
 
@@ -150,7 +153,6 @@ class MeteologicaApi_Test(MeteologicaApiMock_Test):
     def otherFacility(slf):
         return "SomEnergia_Alcolea"
 
-   
     def test_uploadProduction_lastDateUploadedIsPersistent(self):
         facility = self.mainFacility()
         api = self.createApi()
@@ -190,23 +192,18 @@ class MeteologicaApi_Test(MeteologicaApiMock_Test):
                 ("2040-01-01 00:00:00", 10),
             ])
             self.assertEqual(session, api.session())
-
-    def _test_uploadProduction_multipleWithinASession(self):
-        facility = self.mainFacility()
+    
+    def test_login_rightSessionLogin(self):
         api = self.createApi()
-        self.assertFalse(api._session)
-        with api:
-            session = api._session
-            self.assertTrue(sesison)
-            api.uploadProduction(facility, [
-                ("2040-01-01 00:00:00", 10),
-            ])
-            self.assertEqual(session, api._session)
-            api.uploadProduction(facility, [
-                ("2040-01-02 00:00:00", 20),
-            ])
-            self.assertEqual(session, api._session)
-        self.assertFalse(api._session)
+        api.login()
+        self.assertTrue(api.session())
+    
+    def test_login_wrongSessionLogin(self):
+        api = self.createApi(username='badUser')
+        with self.assertRaises(MeteologicaApiError) as ctx:
+            api.login()
+        self.assertEqual(type(u'')(ctx.exception),'INVALID_USERNAME_OR_PASSWORD')
+        self.assertFalse(api.session())
 
 
 
