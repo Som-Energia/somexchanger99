@@ -63,17 +63,16 @@ class MeteologicaApi_Mock(object):
     def lastDateUploaded(self, facility):
         facility_data = self._data.get(facility, [])
         if not facility_data: return None
-        return max(data for data, measure in facility_data)
+        return max(date for date, measure in facility_data)
 
-class MeteologicaApi(MeteologicaApi_Mock):
+class MeteologicaApi:
     def __init__(self, **kwds):
-        super(MeteologicaApi, self).__init__()
         self._config = ns(kwds)
+        self._lastDates = ns()
 
     def _checkFacility(self, facility): pass
 
     def uploadProduction(self, facility, data):
-        super(MeteologicaApi, self).uploadProduction(facility, data)
         self.client = Client(self._config.wsdl)
         self.session = self.client.service.login(dict(
             username = self._config.username,
@@ -101,6 +100,11 @@ class MeteologicaApi(MeteologicaApi_Mock):
 
         self.session.header['sessionToken'] = response.header['sessionToken']
         self.client.service.logout(self.session)
+        lastDateOfCurrentBatch = max(date for date, measure in data)
+        self._lastDates[facility] = max(self._lastDates.get(facility,''), lastDateOfCurrentBatch)
+
+    def lastDateUploaded(self, facility):
+        return self._lastDates.get(facility,None)
 
 
 class MeteologicaApiUtils(object):

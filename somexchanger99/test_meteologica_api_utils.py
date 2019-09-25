@@ -95,8 +95,9 @@ class MeteologicaApiMock_Test(unittest.TestCase):
                 ("2040-01-01 00:00:00", 10),
             ])
         self.assertEqual(type(u'')(ctx.exception), "INVALID_FACILITY_ID")
+        self.assertEqual(api.lastDateUploaded("WrongPlant"), None)
 
-    def test_login_wrongSessionLogin(self):
+    def _test_login_wrongSessionLogin(self):
         api = self.createApi()
         login = api.login('alberto','124')
         self.assertEqual(
@@ -104,7 +105,7 @@ class MeteologicaApiMock_Test(unittest.TestCase):
             'INVALID_USERNAME_OR_PASSWORD'
         )
 
-    def test_login_rightSessionLogin(self):
+    def _test_login_rightSessionLogin(self):
         api = self.createApi()
         login = api.login('alberto','1234')
         self.assertEqual(
@@ -137,6 +138,21 @@ class MeteologicaApi_Test(MeteologicaApiMock_Test):
 
     def otherFacility(slf):
         return "SomEnergia_Alcolea"
+
+    @unittest.skip("not yet implemented")
+    def test_uploadProduction_lastDateUploadedIsPersistent(self):
+        facility = self.mainFacility()
+        api = self.createApi()
+        api.uploadProduction(facility, [
+            ("2040-01-01 00:00:00", 10),
+        ])
+        api2 = self.createApi()
+        self.assertEqual(
+            api2.lastDateUploaded(facility),
+            "2040-01-01 00:00:00"
+        )
+
+
 
 
 unittest.TestCase.__str__ = unittest.TestCase.id
