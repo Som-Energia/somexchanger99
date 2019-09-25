@@ -74,14 +74,14 @@ class MeteologicaApi(MeteologicaApi_Mock):
 
     def uploadProduction(self, facility, data):
         super(MeteologicaApi, self).uploadProduction(facility, data)
-        client = Client(self._config.wsdl)
-        session = client.service.login(dict(
+        self.client = Client(self._config.wsdl)
+        self.session = self.client.service.login(dict(
             username = self._config.username,
             password = self._config.password,
         ))
-        if os.environ.get("VERBOSE"): print(session)
-        response = client.service.setObservation(dict(
-            header = session.header,
+        if os.environ.get("VERBOSE"): print(self.session)
+        response = self.client.service.setObservation(dict(
+            header = self.session.header,
             facilityId = facility,
             variableId = 'prod',
             measurementType ='CUMULATIVE',
@@ -99,8 +99,8 @@ class MeteologicaApi(MeteologicaApi_Mock):
         if response.errorCode != "OK":
             raise MeteologicaApiError(response.errorCode)
 
-        session.header['sessionToken'] = response.header['sessionToken']
-        client.service.logout(session)
+        self.session.header['sessionToken'] = response.header['sessionToken']
+        self.client.service.logout(self.session)
 
 
 class MeteologicaApiUtils(object):
