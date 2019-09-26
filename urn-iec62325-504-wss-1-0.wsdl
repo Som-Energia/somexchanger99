@@ -1,0 +1,44 @@
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:cmsg="urn:iec62325.504:messages:1:0" xmlns:wss="urn:iec62325.504:wss:1:0" xmlns:msg="http://iec.ch/TC57/2011/schema/message" targetNamespace="urn:iec62325.504:wss:1:0">
+	<types>
+		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+			<xs:import namespace="urn:iec62325.504:messages:1:0" schemaLocation="./urn-iec62325-504-messages-1-0.xsd"/> 
+			<xs:import namespace="http://iec.ch/TC57/2011/schema/message" schemaLocation="./http-iec-ch-TC57-2011-schema-message.xsd"/>
+		</xs:schema>
+	</types>
+	<message name="msgRequestMessage">
+		<part name="parameter" element="msg:RequestMessage"/>
+	</message>
+	<message name="msgResponseMessage">
+		<part name="parameter" element="msg:ResponseMessage"/>
+	</message>
+	<message name="msgFaultMsg">
+		<part name="msgFaultMessage" element="msg:FaultMessage"/>
+	</message>
+	<portType name="port_TFEDI_type">
+		<operation name="request">
+			<input message="wss:msgRequestMessage"/>
+			<output message="wss:msgResponseMessage"/>
+			<fault name="msgFaultMessage" message="wss:msgFaultMsg"/>
+		</operation>
+	</portType>
+	<binding name="binding_TFEDI" type="wss:port_TFEDI_type">
+		<soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="request">
+			<soap12:operation soapActionRequired="false" style="document"/>
+			<input>
+				<soap12:body use="literal"/>
+			</input>
+			<output>
+				<soap12:body use="literal"/>
+			</output>
+			<fault name="msgFaultMessage">
+				<soap12:fault name="msgFaultMessage" use="literal"/>
+			</fault>
+		</operation>
+	</binding>
+	<service name="ServiceEME">
+		<port name="Service_EME_Port" binding="wss:binding_TFEDI">
+			<soap12:address location="https://example.com/WebService_EME/Service_EME"/>
+		</port>
+	</service>
+</definitions>

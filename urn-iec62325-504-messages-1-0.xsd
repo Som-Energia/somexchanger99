@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Common messages for IEC 62325-504 operations     -->
+<!--       Change Log                                 -->
+<!-- 2014/09/12  Update after CD review               -->
+<!-- 2013/06/12  First version                        -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:iec62325.504:messages:1:0" targetNamespace="urn:iec62325.504:messages:1:0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<!--_________________________________________________-->
+	<xsd:annotation>
+		<xsd:documentation>TF EDI EME - Common Types</xsd:documentation>
+	</xsd:annotation>
+	<xsd:complexType name="TimeIntervalType">
+		<xsd:sequence>
+			<xsd:element name="start" type="xsd:dateTime"/>
+			<xsd:element name="end" type="xsd:dateTime" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="StatusType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="OK"/>
+			<xsd:enumeration value="FAILED"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:element name="Parameter">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="name" type="xsd:string"/>
+				<xsd:element name="value" type="xsd:string" minOccurs="0"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<!--_________________________________________________-->
+	<xsd:annotation>
+		<xsd:documentation>TF EDI EME - List</xsd:documentation>
+	</xsd:annotation>
+	<xsd:element name="MessageList">
+		<xsd:annotation>
+			<xsd:documentation>List of messages</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="Message" minOccurs="0" maxOccurs="unbounded">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="Code" type="xsd:positiveInteger"/>
+							<xsd:element name="MessageIdentification" type="xsd:string"/>
+							<xsd:element name="MessageVersion" type="xsd:positiveInteger" minOccurs="0"/>
+							<xsd:element name="Status" type="StatusType" minOccurs="0"/>
+							<xsd:element name="ApplicationTimeInterval" type="TimeIntervalType"/>
+							<xsd:element name="ServerTimestamp" type="xsd:dateTime"/>
+							<xsd:element name="Type" type="xsd:string"/>
+							<xsd:element name="Owner" type="xsd:string"/>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<!--_________________________________________________-->
+	<xsd:annotation>
+		<xsd:documentation>TF EDI EME - QueryData</xsd:documentation>
+	</xsd:annotation>
+	<xsd:element name="QueryData">
+		<xsd:annotation>
+			<xsd:documentation>Wraps the response and request parameters from the "QueryData" service</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="RequestParameters">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element ref="Parameter" maxOccurs="unbounded"/>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+				<xsd:any namespace="##any" processContents="lax" minOccurs="0"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<!--_________________________________________________-->
+	<xsd:annotation>
+		<xsd:documentation>TF EDI EME - QueryData List of Parameters</xsd:documentation>
+	</xsd:annotation>
+	<xsd:element name="ParameterList">
+		<xsd:annotation>
+			<xsd:documentation>Parameter list with name and optional value</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence maxOccurs="unbounded">
+				<xsd:element ref="Parameter"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>
