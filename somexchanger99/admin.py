@@ -1,9 +1,15 @@
 from django.contrib import admin
 
-from .models import File2Exchange
+from .models import Curve2Exchange, File2Exchange
 
 
 @admin.register(File2Exchange)
 class File2ExchangeAdmin(admin.ModelAdmin):
 
     list_display = ('__str__', 'process', 'step', 'model', 'active')
+
+
+@admin.register(Curve2Exchange)
+class Curve2ExchangeAdmin(admin.ModelAdmin):
+
+    list_display = ('__str__', 'name', 'active')

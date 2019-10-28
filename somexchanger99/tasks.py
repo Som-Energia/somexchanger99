@@ -8,7 +8,7 @@ from celery.utils.log import get_task_logger
 from config import celery_app
 from .erp_utils import ErpUtils
 from .sftp_utils import SftpUtils
-from .models import File2Exchange
+from .models import Curve2Exchange, File2Exchange
 
 
 logger = get_task_logger(__name__)

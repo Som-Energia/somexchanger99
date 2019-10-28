@@ -39,3 +39,26 @@ class File2Exchange(models.Model):
 
     def __repr__(self):
         return self.__str__()
+
+
+class Curve2Exchange(models.Model):
+
+    name = models.CharField(
+        max_length=20,
+        verbose_name=_('Name'),
+        help_text=_('Name of the curve (p1d, f5d....)')
+    )
+
+    active = models.BooleanField(
+        verbose_name=_('Active'),
+        help_text=_('Check to enable or disable exchange this kind of curves')
+    )
+
+    def __str__(self):
+
+        return '<Curve2Exchange({name}, active:{active})>'.format(
+            **self.__dict__
+        )
+
+    def __repr__(self):
+        return self.__str__()
