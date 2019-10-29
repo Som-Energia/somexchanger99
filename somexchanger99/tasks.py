@@ -85,53 +85,90 @@ def exchange_xmls():
     sftp.close_conection()
 
 
-@celery_app.task(ignore_result=False)
-def exchange_f5ds():
-    '''
-    Pricipal task for exchange f5ds curves with an SFTP
-    '''
-    try:
-        pattern = 'f5d_syntax'
-        from_date = datetime.now() - timedelta(days=1)
-        erp_utils = ErpUtils()
+@celery_app.task(ingnore_result=False)
+def exchange_curves():
 
+    curves_to_exchage = Curve2Exchange.filter(active=True)
+
+    result = []
+
+    for curve in curves_to_exchage:
+        result.append(exchange_curve.delay(curve.name))
+
+    return result
+
+
+@celery_app.task(ignore_result=False)
+def exchange_curve(curve_type):
+    return get_curves(curve_type)
+
+
+def get_curves(curve_type):
+    '''
+    Get curves of `curve_type` from all providers defined in ERP
+    '''
+    files_to_exchange = dict()
+    from_date = datetime.now() - timedelta(days=1)
+    erp_utils = ErpUtils()
+
+
+    providers_sftp = erp_utils.get_sftp_providers(curve_type)
+    for provider in providers_sftp:
+        logger.info("Getting curves from %s", provider['host'])
+        try:
+            sftp = SftpUtils(
+                host=provider['host'],
+                port=provider['port'],
+                username=provider['user'],
+                password=provider['password'],
+                base_dir=provider['root_dir']
+            )
+            files_to_exchange[provider['name']] = sftp.get_files_to_download(
+                provider['root_dir'], provider[pattern], from_date
+            )
+        except Exception as e:
+            msg = "An uncontroled error happened getting curves from: "\
+                  "%s, reason: %s"
+            logger.exception(msg, provider['id'], str(e))
+        finally:
+            sftp.close_conection()
+
+    return files_to_exchange
+
+
+def push_curves(curves_files):
+
+    try:
         neuro_sftp = SftpUtils(
             host=settings.SFTP_CONF['host'],
             port=settings.SFTP_CONF['port'],
             username=settings.SFTP_CONF['username'],
             password=settings.SFTP_CONF['password'],
-            base_dir='f5ds'
+            base_dir=curve_type
         )
 
-        providers_sftp = erp_utils.get_sftp_providers()
-        for provider in providers_sftp:
-            logger.info("Getting curves from %s", provider['host'])
-            try:
-                sftp = SftpUtils(
-                    host=provider['host'],
-                    port=provider['port'],
-                    username=provider['user'],
-                    password=provider['password'],
-                    base_dir=provider['root_dir']
+        try:
+            sftp = SftpUtils(
+                host=provider['host'],
+                port=provider['port'],
+                username=provider['user'],
+                password=provider['password'],
+                base_dir=provider['root_dir']
+            )
+            for path, filename in curves_files:
+                content_file = sftp.download_file_content(path)
+                logger.info("Uploading file %s to exchange sftp", filename)
+                neuro_sftp.upload_file(
+                    content_file,
+                    filename,
+                    os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
                 )
-                files_to_exchange = sftp.get_files_to_download(
-                    provider['root_dir'], provider[pattern], from_date
-                )
-                for path, filename in files_to_exchange:
-                    content_file = sftp.download_file_content(path)
-                    logger.info("Uploading file %s to exchange sftp", filename)
-                    neuro_sftp.upload_file(
-                        content_file,
-                        filename,
-                        os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
-                    )
-                sftp.close_conection()
-            except Exception as e:
-                msg = "An uncontroled error happened during uploading "\
-                      "process, reason: %s"
-                logger.exception(msg, str(e))
-            finally:
-                sftp.close_conection()
+        except Exception as e:
+            msg = "An uncontroled error happened during uploading "\
+                  "process, reason: %s"
+            logger.exception(msg, str(e))
+        finally:
+            sftp.close_conection()
     except Exception as e:
         logger.exception("An uncontroled error happened, reason: %s", str(e))
     finally:
