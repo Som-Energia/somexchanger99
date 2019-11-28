@@ -90,3 +90,30 @@ class TestErpUtils(TestCase):
                 ],
             }
         )
+
+    @patch.object(sftp_utils.SftpUtils, 'get_files_to_download')
+    def test__get_curves_p1d(self, mock):
+        mock.return_value = [
+            ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
+            ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
+        ]
+
+        curves = get_curves('p1')
+
+        self.assertDictEqual(
+            curves,
+            {
+                'Endesa': [
+                    ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
+                    ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
+                ],
+                'Iberdrola': [
+                    ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
+                    ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
+                ],
+                'Unión Fenosa': [
+                    ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
+                    ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
+                ],
+            }
+        )
