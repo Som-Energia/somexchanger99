@@ -85,33 +85,41 @@ def exchange_xmls():
     sftp.close_conection()
 
 
-@celery_app.task(ingnore_result=False)
+@celery_app.task(in_tasgnore_result=False)
+def exchange_curves_task():
+    return exchange_curves()
+
+
 def exchange_curves():
+    exchange_result = dict()
 
     curves_to_exchage = Curve2Exchange.filter(active=True)
-
-    result = []
-
     for curve in curves_to_exchage:
-        result.append(exchange_curve.delay(curve.name))
+        curves_files = get_curves(curve.erp_name)
+        exchange_status = {
+            distri: {'downloaded': len(curves_to_exchage)}
+            for distr, curves_to_exchage in curves_files
+        }
 
-    return result
+        upload_result = push_curves(curve.name, curves_files)
+        for distri, num_uploaded_curves in updladed_result:
+            exchange_status[distri]['uploaded'] = num_uploaded_curves
+
+        exange_result[curve.name] = exchange_status
+
+    return exange_result
 
 
-@celery_app.task(ignore_result=False)
-def exchange_curve(curve_type):
-    return get_curves(curve_type)
-
-
-def get_curves(curve_type):
+def get_curves(curve_name):
     '''
     Get curves of `curve_type` from all providers defined in ERP
+    curve_name: technical name of the curve.
     '''
     files_to_exchange = dict()
     from_date = datetime.now() - timedelta(days=1)
     erp_utils = ErpUtils()
 
-    providers_sftp = erp_utils.get_sftp_providers(curve_type)
+    providers_sftp = erp_utils.get_sftp_providers(curve_name)
     for provider in providers_sftp:
         logger.info("Getting curves from %s", provider['host'])
         try:
@@ -122,7 +130,7 @@ def get_curves(curve_type):
                 password=provider['password'] or '',
                 base_dir=provider['root_dir']
             )
-            pattern = '{}_syntax'.format(curve_type)
+            pattern = '{}_syntax'.format(curve_name)
             files_to_exchange[provider['name']] = sftp.get_files_to_download(
                 path=provider['root_dir'],
                 pattern=provider[pattern],
@@ -138,7 +146,14 @@ def get_curves(curve_type):
     return files_to_exchange
 
 
-def push_curves(curves_files):
+def push_curves(curve_name, curves_files):
+    '''
+    curve_name: Coloquial name of the curve: p1d, f5d....
+    curves_files: Structure {provider: [(curve_file_path, file_name)]} with all
+    files in providers to exchange
+    '''
+    upload_result = dict()
+    erp_utils = ErpUtils()
 
     try:
         neuro_sftp = SftpUtils(
@@ -146,32 +161,38 @@ def push_curves(curves_files):
             port=settings.SFTP_CONF['port'],
             username=settings.SFTP_CONF['username'],
             password=settings.SFTP_CONF['password'],
-            base_dir=curve_type
+            base_dir=curve_name
         )
-
-        try:
-            sftp = SftpUtils(
-                host=provider['host'],
-                port=provider['port'],
-                username=provider['user'],
-                password=provider['password'],
-                base_dir=provider['root_dir']
-            )
-            for path, filename in curves_files:
-                content_file = sftp.download_file_content(path)
-                logger.info("Uploading file %s to exchange sftp", filename)
-                neuro_sftp.upload_file(
-                    content_file,
-                    filename,
-                    os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+        providers_sftp = erp_utils.get_sftp_providers(curve_name)
+        for provider in providers_sftp:
+            num_exchange_files = 0
+            try:
+                sftp = SftpUtils(
+                    host=provider['host'],
+                    port=provider['port'],
+                    username=provider['user'],
+                    password=provider['password'],
+                    base_dir=provider['root_dir']
                 )
-        except Exception as e:
-            msg = "An uncontroled error happened during uploading "\
-                  "process, reason: %s"
-            logger.exception(msg, str(e))
-        finally:
-            sftp.close_conection()
+                for path, filename in curves_files[provider['name']]:
+                    content_file = sftp.download_file_content(path)
+                    logger.info("Uploading file %s to exchange sftp", filename)
+                    neuro_sftp.upload_file(
+                        content_file,
+                        filename,
+                        os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+                    )
+                    num_exchange_files += 1
+            except Exception as e:
+                msg = "An uncontroled error happened during uploading "\
+                      "process, reason: %s"
+                logger.exception(msg, str(e))
+                raise e
+            finally:
+                upload_result[provider['name']] = num_exchange_files
+                sftp.close_conection()
     except Exception as e:
         logger.exception("An uncontroled error happened, reason: %s", str(e))
     finally:
         neuro_sftp.close_conection()
+        return upload_result

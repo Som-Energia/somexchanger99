@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from . import erp_utils
-from .tasks import get_curves
+from .tasks import get_curves, push_curves
 from . import sftp_utils
 
 class TestErpUtils(TestCase):
@@ -39,14 +39,14 @@ class TestErpUtils(TestCase):
         self.assertEqual(len(providers_list), 1)
         self.assertTrue(is_f5d_pattern)
 
-    def test__get_sftp_providers_p5d(self):
-        providers_list = self.erp.get_sftp_providers('p5d')
+    def test__get_sftp_providers_p1d(self):
+        providers_list = self.erp.get_sftp_providers('p1')
 
-        is_p5d_pattern = all(
-            ['p5d_syntax' in provider for provider in providers_list]
+        is_p1d_pattern = all(
+            ['p1_syntax' in provider for provider in providers_list]
         )
         self.assertGreater(len(providers_list), 0)
-        self.assertTrue(is_p5d_pattern)
+        self.assertTrue(is_p1d_pattern)
 
     @patch.object(sftp_utils.SftpUtils, 'get_files_to_download')
     def test__get_curves_f5d(self, mock):
@@ -111,9 +111,27 @@ class TestErpUtils(TestCase):
                     ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
                     ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
                 ],
-                'Unión Fenosa': [
-                    ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
-                    ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
-                ],
             }
+        )
+
+    @patch.object(sftp_utils.SftpUtils, 'download_file_content')
+    @patch.object(sftp_utils.SftpUtils, 'upload_file')
+    def test__push_curves_p1d(self, sftp_mock, neuro_mock):
+        sftp_mock.return_value = 'hola soy una curva cuarthoria'
+        neuro_mock.return_value = None
+        curves_files = {
+            'Endesa': [
+                ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
+                ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
+            ],
+            'Iberdrola': [
+                ('/folder1/p1dfile1.zip', 'p1dfile1.zip'),
+                ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
+            ],
+        }
+
+        exchange_result = push_curves('p1', curves_files)
+
+        self.assertDictEqual(
+            exchange_result, {'Endesa': 2, 'Iberdrola': 2}
         )
