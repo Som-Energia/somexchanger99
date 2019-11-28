@@ -111,7 +111,6 @@ def get_curves(curve_type):
     from_date = datetime.now() - timedelta(days=1)
     erp_utils = ErpUtils()
 
-
     providers_sftp = erp_utils.get_sftp_providers(curve_type)
     for provider in providers_sftp:
         logger.info("Getting curves from %s", provider['host'])
@@ -120,11 +119,14 @@ def get_curves(curve_type):
                 host=provider['host'],
                 port=provider['port'],
                 username=provider['user'],
-                password=provider['password'],
+                password=provider['password'] or '',
                 base_dir=provider['root_dir']
             )
+            pattern = '{}_syntax'.format(curve_type)
             files_to_exchange[provider['name']] = sftp.get_files_to_download(
-                provider['root_dir'], provider[pattern], from_date
+                path=provider['root_dir'],
+                pattern=provider[pattern],
+                date=from_date
             )
         except Exception as e:
             msg = "An uncontroled error happened getting curves from: "\

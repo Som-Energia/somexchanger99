@@ -4,11 +4,12 @@ from django.test import TestCase
 
 from . import erp_utils
 from .tasks import get_curves
-
+from . import sftp_utils
 
 class TestErpUtils(TestCase):
 
     erp = erp_utils.ErpUtils()
+
 
     def setUp(self):
         self.maxDiff = None
@@ -47,7 +48,45 @@ class TestErpUtils(TestCase):
         self.assertGreater(len(providers_list), 0)
         self.assertTrue(is_p5d_pattern)
 
-    def test__get_curves_f5d(self):
+    @patch.object(sftp_utils.SftpUtils, 'get_files_to_download')
+    def test__get_curves_f5d(self, mock):
+        mock.return_value = [
+            ('/folder1/file1.zip', 'file1.zip'),
+            ('/folder2/file2.zip', 'file2.zip')
+        ]
+
         curves = get_curves('f5d')
 
-        self.assertDictEqual(curves, dict())
+        self.assertDictEqual(
+            curves,
+            {
+                'Aseme': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'E.on': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'Eléctrica de Eriste': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'Eléctrica del Ebro SA': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'Endesa': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'Iberdrola': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'Unión Fenosa': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+            }
+        )
