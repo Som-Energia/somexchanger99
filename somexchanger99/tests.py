@@ -1,5 +1,7 @@
 import unittest
+from datetime import datetime
 from unittest.mock import patch
+from django.utils import timezone
 from django.test import TestCase
 
 from . import erp_utils
@@ -55,14 +57,25 @@ class TestErpUtils(TestCase):
             ('/folder1/file1.zip', 'file1.zip'),
             ('/folder2/file2.zip', 'file2.zip')
         ]
-        curve = Curve2Exchange(name='f5d',erp_name='f5d',active=True)
-        curve.save()
-        curves = get_curves('f5d')
+        curve2exchange = Curve2Exchange(name='f5d', erp_name='f5d', active=True)
+        curve2exchange.save()
 
+        curves = get_curves(curve2exchange.erp_name)
+
+        curve2exchange.refresh_from_db()
+        self.assertEqual(curve2exchange.last_upload.date(), timezone.now().date())
         self.assertDictEqual(
             curves,
             {
                 'Aseme': [
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'E.on':[
+                    ('/folder1/file1.zip', 'file1.zip'),
+                    ('/folder2/file2.zip', 'file2.zip')
+                ],
+                'Eléctrica de Eriste': [
                     ('/folder1/file1.zip', 'file1.zip'),
                     ('/folder2/file2.zip', 'file2.zip')
                 ],
@@ -92,10 +105,13 @@ class TestErpUtils(TestCase):
             ('/folder2/p1dfile2.zip', 'p1dfile2.zip')
         ]
 
-        curve = Curve2Exchange(name='p1d',erp_name='p1',active=True)
-        curve.save()
+        curve2exchange = Curve2Exchange(name='p1d', erp_name='p1', active=True)
+        curve2exchange.save()
+
         curves = get_curves('p1')
 
+        curve2exchange.refresh_from_db()
+        self.assertEqual(curve2exchange.last_upload.date(), timezone.now().date())
         self.assertDictEqual(
             curves,
             {

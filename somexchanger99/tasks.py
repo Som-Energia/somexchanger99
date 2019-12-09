@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 from django.conf import settings
+from django.utils import timezone
 from celery.utils.log import get_task_logger
 
 from config import celery_app
@@ -119,7 +120,7 @@ def get_curves(curve_name):
     curve = Curve2Exchange.objects.get(erp_name=curve_name)
     erp_utils = ErpUtils()
 
-    providers_sftp = erp_utils.get_sftp_providers(curve_name)
+    providers_sftp = erp_utils.get_sftp_providers(curve.erp_name)
     for provider in providers_sftp:
         logger.info("Getting curves from %s", provider['host'])
         try:
@@ -127,14 +128,14 @@ def get_curves(curve_name):
                 host=provider['host'],
                 port=provider['port'],
                 username=provider['user'],
-                password=provider['password'] or '',
+                password=provider.get('password', ''),
                 base_dir=provider['root_dir']
             )
             pattern = '{}_syntax'.format(curve_name)
             files_to_exchange[provider['name']] = sftp.get_files_to_download(
                 path=provider['root_dir'],
                 pattern=provider[pattern],
-                date=curve.last_upload or datetime.now() - timedelta(day=1)
+                date=curve.last_upload or timezone.now() - timedelta(days=1)
             )
         except Exception as e:
             msg = "An uncontroled error happened getting curves from: "\
@@ -142,7 +143,7 @@ def get_curves(curve_name):
             logger.exception(msg, provider['id'], str(e))
         finally:
             sftp.close_conection()
-    curve.last_upload = datetime.now()
+    curve.last_upload = timezone.now()
     curve.save()
     return files_to_exchange
 
