@@ -116,7 +116,7 @@ def get_curves(curve_name):
     curve_name: technical name of the curve.
     '''
     files_to_exchange = dict()
-    from_date = datetime.now() - timedelta(days=1)
+    curve = Curve2Exchange.objects.get(erp_name=curve_name)
     erp_utils = ErpUtils()
 
     providers_sftp = erp_utils.get_sftp_providers(curve_name)
@@ -134,7 +134,7 @@ def get_curves(curve_name):
             files_to_exchange[provider['name']] = sftp.get_files_to_download(
                 path=provider['root_dir'],
                 pattern=provider[pattern],
-                date=from_date
+                date=curve.last_upload or datetime.now() - timedelta(day=1)
             )
         except Exception as e:
             msg = "An uncontroled error happened getting curves from: "\
@@ -142,7 +142,8 @@ def get_curves(curve_name):
             logger.exception(msg, provider['id'], str(e))
         finally:
             sftp.close_conection()
-
+    curve.last_upload = datetime.now()
+    curve.save()
     return files_to_exchange
 
 
@@ -154,7 +155,6 @@ def push_curves(curve_name, curves_files):
     '''
     upload_result = dict()
     erp_utils = ErpUtils()
-
     try:
         neuro_sftp = SftpUtils(
             host=settings.SFTP_CONF['host'],

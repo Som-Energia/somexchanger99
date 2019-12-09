@@ -63,7 +63,9 @@ class Curve2Exchange(models.Model):
 
     last_upload = models.DateTimeField(
         verbose_name=_('Last date uploaded'),
-        help_text=_('Last time this kind of curves was uploaded')
+        help_text=_('Last time this kind of curves was uploaded'),
+        null=True,
+        blank=True
     )
 
     def __str__(self):
