@@ -72,7 +72,8 @@ class ErpUtils(object):
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
                 ('step_id.name', '=', kwargs.get('step')),
-                ('date', '>=', date)
+                ('date', '>=', date),
+                ('date', '<=', date)
             ]
         }
 
