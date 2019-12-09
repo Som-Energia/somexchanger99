@@ -39,18 +39,20 @@ class ErpUtils(object):
 
         return attachments if not step else self.__step_filter(attachments, step)
 
-    def get_sftp_providers(self):
+    def get_sftp_providers(self, curve_type):
         Provider = self._client.model('tg.comer.provider')
         TgSFTP = self._client.model('tg.sftp')
         provider_ids = Provider.search([])
 
         providers = Provider.read(provider_ids)
 
+        pattern = '{}_syntax'.format(curve_type)
+
         return [
             dict(
-                list(TgSFTP.read(provider['sftp'][0]).items()) + [('f5d_syntax', provider['f5d_syntax'])]
+                list(TgSFTP.read(provider['sftp'][0]).items()) + [(pattern, provider[pattern])]
             )
-            for provider in providers if provider['enabled'] and provider['f5d_enabled']
+            for provider in providers if provider['enabled'] and provider['{}_enabled'.format(curve_type)]
         ]
 
     def _get_objects_with_attachment(self, model, date, **kwargs):

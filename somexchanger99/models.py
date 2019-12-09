@@ -39,3 +39,40 @@ class File2Exchange(models.Model):
 
     def __repr__(self):
         return self.__str__()
+
+
+class Curve2Exchange(models.Model):
+
+    name = models.CharField(
+        max_length=20,
+        verbose_name=_('Name'),
+        help_text=_('Name of the curve (p1d, f5d....)')
+    )
+
+    erp_name = models.CharField(
+        max_length=20,
+        verbose_name=_('ERP Name'),
+        help_text=_('Name of the curve in ERP (p1, f5d....)'),
+        null=True
+    )
+
+    active = models.BooleanField(
+        verbose_name=_('Active'),
+        help_text=_('Check to enable or disable exchange this kind of curves')
+    )
+
+    last_upload = models.DateTimeField(
+        verbose_name=_('Last date uploaded'),
+        help_text=_('Last time this kind of curves was uploaded'),
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+
+        return '<Curve2Exchange({name}, active:{active})>'.format(
+            **self.__dict__
+        )
+
+    def __repr__(self):
+        return self.__str__()
