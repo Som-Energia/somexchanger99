@@ -14,7 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='curve2exchange',
             name='last_upload',
-            field=models.DateTimeField(default=datetime.datetime(2019, 11, 26, 17, 27, 45, 940057), help_text='Last time this kind of curves was uploaded', verbose_name='Last date uploaded'),
-            preserve_default=False,
+            field=models.DateTimeField(blank=True, help_text='Last time this kind of curves was uploaded', null=True, verbose_name='Last date uploaded')
         ),
     ]
