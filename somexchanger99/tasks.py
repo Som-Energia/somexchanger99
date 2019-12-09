@@ -86,7 +86,7 @@ def exchange_xmls():
     sftp.close_conection()
 
 
-@celery_app.task(in_tasgnore_result=False)
+@celery_app.task(ignore_result=False)
 def exchange_curves_task():
     return exchange_curves()
 
