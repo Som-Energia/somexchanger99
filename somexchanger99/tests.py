@@ -1,18 +1,16 @@
-import unittest
-from datetime import datetime
 from unittest.mock import patch
-from django.utils import timezone
-from django.test import TestCase
 
-from . import erp_utils
+from django.test import TestCase
+from django.utils import timezone
+
+from . import erp_utils, sftp_utils
 from .models import Curve2Exchange
 from .tasks import get_curves, push_curves
-from . import sftp_utils
+
 
 class TestErpUtils(TestCase):
 
     erp = erp_utils.ErpUtils()
-
 
     def setUp(self):
         self.maxDiff = None
@@ -71,7 +69,7 @@ class TestErpUtils(TestCase):
                     ('/folder1/file1.zip', 'file1.zip'),
                     ('/folder2/file2.zip', 'file2.zip')
                 ],
-                'E.on':[
+                'E.on': [
                     ('/folder1/file1.zip', 'file1.zip'),
                     ('/folder2/file2.zip', 'file2.zip')
                 ],

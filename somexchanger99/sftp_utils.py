@@ -3,9 +3,9 @@ import os
 import re
 import stat
 from datetime import datetime as dt
-from datetime import timedelta
 
 from django.conf import settings
+from django.utils.timezone import make_aware
 from paramiko.sftp_client import SFTPClient
 from paramiko.transport import Transport
 
@@ -39,7 +39,10 @@ class SftpUtils(object):
         except Exception as e:
             msg = "There was an uncontroled error uploading %s to %s: %s"
             logger.exception(
-                msg, os.path.join(remote_path, file_name), settings.SFTP_CONF['host'], str(e)
+                msg,
+                os.path.join(remote_path, file_name),
+                settings.SFTP_CONF['host'],
+                str(e)
             )
             raise e
         return os.path.join(remote_path, file_name)
@@ -60,7 +63,7 @@ class SftpUtils(object):
                     file_list = file_list + self.get_files_to_download(new_path, pattern, date)
 
                 match_file = re.match(pattern, file_.filename) and \
-                    dt.fromtimestamp(file_.st_mtime) >= date
+                    make_aware(dt.fromtimestamp(file_.st_mtime)) >= date
                 if match_file:
                     file_list.append(
                         (os.path.join(path, file_.filename), file_.filename)

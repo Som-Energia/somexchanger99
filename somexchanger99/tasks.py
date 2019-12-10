@@ -2,15 +2,15 @@ import base64
 import os
 from datetime import datetime, timedelta
 
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.utils import timezone
-from celery.utils.log import get_task_logger
 
 from config import celery_app
-from .erp_utils import ErpUtils
-from .sftp_utils import SftpUtils
-from .models import Curve2Exchange, File2Exchange
 
+from .erp_utils import ErpUtils
+from .models import Curve2Exchange, File2Exchange
+from .sftp_utils import SftpUtils
 
 logger = get_task_logger(__name__)
 
@@ -94,21 +94,21 @@ def exchange_curves_task():
 def exchange_curves():
     exchange_result = dict()
 
-    curves_to_exchage = Curve2Exchange.filter(active=True)
+    curves_to_exchage = Curve2Exchange.objects.filter(active=True)
     for curve in curves_to_exchage:
         curves_files = get_curves(curve.erp_name)
         exchange_status = {
             distri: {'downloaded': len(curves_to_exchage)}
-            for distr, curves_to_exchage in curves_files
+            for distri, curves_to_exchage in curves_files.items()
         }
 
-        upload_result = push_curves(curve.name, curves_files)
-        for distri, num_uploaded_curves in updladed_result:
+        upload_result = push_curves(curve, curves_files)
+        for distri, num_uploaded_curves in upload_result.items():
             exchange_status[distri]['uploaded'] = num_uploaded_curves
 
-        exange_result[curve.name] = exchange_status
+        exchange_result[curve.name] = exchange_status
 
-    return exange_result
+    return exchange_result
 
 
 def get_curves(curve_name):
@@ -116,19 +116,20 @@ def get_curves(curve_name):
     Get curves of `curve_type` from all providers defined in ERP
     curve_name: technical name of the curve.
     '''
+    sftp = None
     files_to_exchange = dict()
     curve = Curve2Exchange.objects.get(erp_name=curve_name)
     erp_utils = ErpUtils()
 
     providers_sftp = erp_utils.get_sftp_providers(curve.erp_name)
     for provider in providers_sftp:
-        logger.info("Getting curves from %s", provider['host'])
+        logger.info("Getting %s curves from %s", curve_name, provider['host'])
         try:
             sftp = SftpUtils(
                 host=provider['host'],
                 port=provider['port'],
                 username=provider['user'],
-                password=provider.get('password', ''),
+                password=provider.get('password') or  '',
                 base_dir=provider['root_dir']
             )
             pattern = '{}_syntax'.format(curve_name)
@@ -142,13 +143,15 @@ def get_curves(curve_name):
                   "%s, reason: %s"
             logger.exception(msg, provider['id'], str(e))
         finally:
-            sftp.close_conection()
+            if sftp:
+                sftp.close_conection()
+                sftp = None
     curve.last_upload = timezone.now()
     curve.save()
     return files_to_exchange
 
 
-def push_curves(curve_name, curves_files):
+def push_curves(curve2exchange, curves_files):
     '''
     curve_name: Coloquial name of the curve: p1d, f5d....
     curves_files: Structure {provider: [(curve_file_path, file_name)]} with all
@@ -162,9 +165,9 @@ def push_curves(curve_name, curves_files):
             port=settings.SFTP_CONF['port'],
             username=settings.SFTP_CONF['username'],
             password=settings.SFTP_CONF['password'],
-            base_dir=curve_name
+            base_dir=curve2exchange.name
         )
-        providers_sftp = erp_utils.get_sftp_providers(curve_name)
+        providers_sftp = erp_utils.get_sftp_providers(curve2exchange.erp_name)
         for provider in providers_sftp:
             num_exchange_files = 0
             try:
@@ -172,7 +175,7 @@ def push_curves(curve_name, curves_files):
                     host=provider['host'],
                     port=provider['port'],
                     username=provider['user'],
-                    password=provider['password'],
+                    password=provider.get('password') or '',
                     base_dir=provider['root_dir']
                 )
                 for path, filename in curves_files[provider['name']]:
