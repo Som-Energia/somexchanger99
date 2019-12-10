@@ -8,6 +8,7 @@ from django.conf import settings
 from django.utils.timezone import make_aware
 from paramiko.sftp_client import SFTPClient
 from paramiko.transport import Transport
+from pytz.exceptions import AmbiguousTimeError
 
 logger = logging.getLogger(__name__)
 
@@ -54,20 +55,24 @@ class SftpUtils(object):
         return content
 
     def get_files_to_download(self, path, pattern, date):
-
         file_list = []
+
         try:
             for file_ in self._client.listdir_attr(path):
                 if stat.S_ISDIR(file_.st_mode):
                     new_path = os.path.join(path, file_.filename)
                     file_list = file_list + self.get_files_to_download(new_path, pattern, date)
 
-                match_file = re.match(pattern, file_.filename) and \
-                    make_aware(dt.fromtimestamp(file_.st_mtime)) >= date
-                if match_file:
-                    file_list.append(
-                        (os.path.join(path, file_.filename), file_.filename)
-                    )
+                try:
+                    match_file = re.match(pattern, file_.filename) and \
+                                 make_aware(dt.fromtimestamp(file_.st_mtime)) >= date
+                except AmbiguousTimeError as e:
+                    logger.error("An error ocurred in date comparation, reason: %s", str(e))
+                else:
+                    if match_file:
+                        file_list.append(
+                            (os.path.join(path, file_.filename), file_.filename)
+                        )
         except FileNotFoundError:
             logger.error("Path %s not found", path)
         except Exception as e:
