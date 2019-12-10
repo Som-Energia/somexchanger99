@@ -7,6 +7,7 @@ verify_ssl = true
 ipython = "*"
 mccabe = "*"
 flake8 = "*"
+isort = "*"
 
 [packages]
 Django = ">=2.2,<=3.0"
