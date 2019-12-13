@@ -8,6 +8,9 @@ ipython = "*"
 mccabe = "*"
 flake8 = "*"
 isort = "*"
+autoflake = "*"
+pyflakes = "*"
+pylint = "*"
 
 [packages]
 Django = ">=2.2,<=3.0"
