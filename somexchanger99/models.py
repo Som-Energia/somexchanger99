@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext as _
 
 
-class File2Exchange(models.Model):
+class Atr2Exchange(models.Model):
 
     process = models.CharField(
         max_length=128,

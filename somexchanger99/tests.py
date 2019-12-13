@@ -5,10 +5,10 @@ from django.utils import timezone
 
 from . import erp_utils, sftp_utils
 from .models import Curve2Exchange
-from .tasks import get_curves, push_curves
+from .utils import get_curves, push_curves
 
 
-class TestErpUtils(TestCase):
+class TestUtils(TestCase):
 
     erp = erp_utils.ErpUtils()
 
@@ -109,7 +109,10 @@ class TestErpUtils(TestCase):
         curves = get_curves('p1')
 
         curve2exchange.refresh_from_db()
-        self.assertEqual(curve2exchange.last_upload.date(), timezone.now().date())
+        self.assertEqual(
+            curve2exchange.last_upload.date(),
+            timezone.now().date()
+        )
         self.assertDictEqual(
             curves,
             {
@@ -127,6 +130,7 @@ class TestErpUtils(TestCase):
     @patch.object(sftp_utils.SftpUtils, 'download_file_content')
     @patch.object(sftp_utils.SftpUtils, 'upload_file')
     def test__push_curves_p1d(self, sftp_mock, neuro_mock):
+        curve2exchange = Curve2Exchange(name='p1d', erp_name='p1', active=True)
         sftp_mock.return_value = 'hola soy una curva cuarthoria'
         neuro_mock.return_value = None
         curves_files = {
@@ -140,7 +144,7 @@ class TestErpUtils(TestCase):
             ],
         }
 
-        exchange_result = push_curves('p1', curves_files)
+        exchange_result = push_curves(curve2exchange, curves_files)
 
         self.assertDictEqual(
             exchange_result, {'Endesa': 2, 'Iberdrola': 2}
