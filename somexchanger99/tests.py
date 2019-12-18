@@ -4,7 +4,8 @@ from django.test import TestCase
 from django.utils import timezone
 
 from . import erp_utils, sftp_utils
-from .models import Curve2Exchange
+from .controllers import exchange_meteologica_predictions
+from .models import Curve2Exchange, File2Exchange
 from .utils import get_curves, push_curves
 
 

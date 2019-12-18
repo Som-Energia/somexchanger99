@@ -1,14 +1,15 @@
-import os
 import base64
+import os
 from datetime import datetime, timedelta
 
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.utils import timezone
-from celery.utils.log import get_task_logger
 
 from .erp_utils import ErpUtils
-from .sftp_utils import SftpUtils
+from .ftp_utils import FtpUtils
 from .models import Curve2Exchange
+from .sftp_utils import SftpUtils
 
 ERP = ErpUtils()
 
@@ -151,3 +152,40 @@ def push_curves(curve2exchange, curves_files):
     finally:
         neuro_sftp.close_conection()
         return upload_result
+
+
+def get_meteologica_files(files2exchange):
+    logger.info("Getting meteologica predicionts")
+    meteo_ftp = FtpUtils(**settings.METEO_CONF)
+    meteologica_files = []
+
+    meteologica_files = [
+        (file_.name, meteo_ftp.get_files_to_download(meteo_ftp.base_dir, file_.pattern, file_.last_upload))
+        for file_ in files2exchange
+    ]
+    meteo_ftp.close()
+
+    return meteologica_files
+
+
+def push_meteologica_files(files2upload):
+    meteo_ftp = FtpUtils(**settings.METEO_CONF)
+    enexpa_sftp = SftpUtils(**settings.ENEXPA_CONF)
+    upload_result = dict()
+
+    for files in files2upload:
+        num_exchange_files = 0
+        file_type, files_to_upload = files
+        logger.info("Uploading %s files from meteologica to our sftp", file_type)
+        for path, file_name in files_to_upload:
+            content_file = meteo_ftp.download_file_content(path)
+            enexpa_sftp.upload_file(
+                content_file,
+                file_name,
+                os.path.join(enexpa_sftp._base_remote_dir, str(datetime.now().date()))
+            )
+            num_exchange_files += 1
+        upload_result[file_type] = num_exchange_files
+
+    meteo_ftp.close()
+    return upload_result

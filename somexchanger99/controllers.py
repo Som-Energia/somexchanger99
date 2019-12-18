@@ -1,9 +1,11 @@
 from datetime import datetime
 
-from .sftp_utils import SftpUtils
+from django.utils.timezone import now
 
-from .models import Curve2Exchange, Atr2Exchange
-from .utils import get_curves, push_curves, get_attachments, send_attachments
+from .models import Atr2Exchange, Curve2Exchange, File2Exchange
+from .sftp_utils import SftpUtils
+from .utils import (get_attachments, get_curves, get_meteologica_files,
+                    push_curves, push_meteologica_files, send_attachments)
 
 
 def exchange_xmls():
@@ -44,4 +46,20 @@ def exchange_curves():
 
 
 def exchange_meteologica_predictions():
-    pass
+    exchange_result = dict()
+
+    files2exchange = File2Exchange.objects.filter(
+        origin__code_name='METEOLGC',
+        active=True
+    )
+
+    files = get_meteologica_files(files2exchange)
+    for file_type, founded_file_list in files:
+        exchange_result[file_type] = {'downloaded': len(founded_file_list)}
+
+    upload_res = push_meteologica_files(files)
+    for file_type, uploaded_files in upload_res.items():
+        exchange_result[file_type]['uploaded'] = uploaded_files
+
+    files2exchange.update(last_upload=now())
+    return exchange_result
