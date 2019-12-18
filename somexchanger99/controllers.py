@@ -38,7 +38,8 @@ def exchange_curves():
 
         upload_result = push_curves(curve, curves_files)
         for distri, num_uploaded_curves in upload_result.items():
-            exchange_status[distri]['uploaded'] = num_uploaded_curves
+            if distri in exchange_status:
+                exchange_status[distri]['uploaded'] = num_uploaded_curves
 
         exchange_result[curve.name] = exchange_status
 
