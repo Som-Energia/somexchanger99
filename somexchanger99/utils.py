@@ -176,13 +176,15 @@ def push_meteologica_files(files2upload):
     for files in files2upload:
         num_exchange_files = 0
         file_type, files_to_upload = files
-        logger.info("Uploading %s files from meteologica to our sftp", file_type)
+        msg = "Uploading %n files of plant %s from meteologica to our sftp"
+        logger.info(len(files_to_upload), file_type)
+
         for path, file_name in files_to_upload:
             content_file = meteo_ftp.download_file_content(path)
             enexpa_sftp.upload_file(
                 content_file,
                 file_name,
-                os.path.join(enexpa_sftp._base_remote_dir, str(datetime.now().date()))
+                os.path.join(enexpa_sftp._base_remote_dir, '')
             )
             num_exchange_files += 1
         upload_result[file_type] = num_exchange_files
