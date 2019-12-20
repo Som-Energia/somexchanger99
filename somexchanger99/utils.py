@@ -155,7 +155,7 @@ def push_curves(curve2exchange, curves_files):
 
 
 def get_meteologica_files(files2exchange):
-    logger.info("Getting meteologica predicionts")
+    logger.info("Getting meteologica predictions")
     meteo_ftp = FtpUtils(**settings.METEO_CONF)
     meteologica_files = []
 
@@ -176,8 +176,8 @@ def push_meteologica_files(files2upload):
     for files in files2upload:
         num_exchange_files = 0
         file_type, files_to_upload = files
-        msg = "Uploading %n files of plant %s from meteologica to our sftp"
-        logger.info(len(files_to_upload), file_type)
+        msg = "Uploading %d files of plant %s from meteologica to our sftp"
+        logger.info(msg, len(files_to_upload), file_type)
 
         for path, file_name in files_to_upload:
             content_file = meteo_ftp.download_file_content(path)
