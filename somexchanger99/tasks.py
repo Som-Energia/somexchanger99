@@ -1,6 +1,6 @@
 from config import celery_app
 
-from .controllers import exchange_curves, exchange_meteologica_predictions
+from .controllers import exchange_curves, exchange_meteologica_predictions, exchange_xmls
 
 
 @celery_app.task(ignore_result=False)

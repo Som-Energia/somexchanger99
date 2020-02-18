@@ -27,7 +27,7 @@ def get_attachments(model, date, process, step=None):
         step=step
     )
     attachments_result = {
-        'date': date,
+        'date': str(date.date()),
         'process': process,
         'attachments': attachments
     }
@@ -190,4 +190,5 @@ def push_meteologica_files(files2upload):
         upload_result[file_type] = num_exchange_files
 
     meteo_ftp.close()
+    logger.info("Founded %d preditcion files", len(meteologica_files))
     return upload_result
