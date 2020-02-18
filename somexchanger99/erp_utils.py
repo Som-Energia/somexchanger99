@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from operator import itemgetter
 
 from django.conf import settings
@@ -64,16 +65,18 @@ class ErpUtils(object):
 
     def __get_object_query(self, model, date, **kwargs):
 
+        tomorrow = str((date + timedelta(days=1)).date())
         BASE_QUERY = {
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
-                ('data_carrega', '>=', date)
+                ('data_carrega', '>=', str(date.date())),
+                ('data_carrega', '<', tomorrow)
             ],
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
                 ('step_id.name', '=', kwargs.get('step')),
-                ('date', '>=', date),
-                ('date', '<=', date)
+                ('date', '>=', str(date.date())),
+                ('date', '<', tomorrow)
             ]
         }
 

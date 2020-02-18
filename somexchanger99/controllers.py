@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.utils.timezone import now
 
 from .models import Atr2Exchange, Curve2Exchange, File2Exchange
@@ -10,7 +11,7 @@ from .utils import (get_attachments, get_curves, get_meteologica_files,
 
 def exchange_xmls():
     sftp = SftpUtils(**settings.SFTP_CONF)
-    today = str(datetime.now().date())
+    today = datetime.now()
     attachments_result = [
         get_attachments(
             model=file2exchange.model,
@@ -22,7 +23,7 @@ def exchange_xmls():
     ]
 
     [send_attachments(sftp, attachment) for attachment in attachments_result]
-    ftp.close_conection()
+    sftp.close_conection()
 
 
 def exchange_curves():
@@ -62,5 +63,5 @@ def exchange_meteologica_predictions():
     for file_type, uploaded_files in upload_res.items():
         exchange_result[file_type]['uploaded'] = uploaded_files
 
-    files2exchange.update(last_upload=now())
+    files2exchange.update(last_upload=now() - timedelta(hours=1))
     return exchange_result
