@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from operator import itemgetter
 
 from django.conf import settings
@@ -38,7 +38,7 @@ class ErpUtils(object):
             order='create_date DESC'
         )
 
-        return attachments if not step else self.__step_filter(attachments, step)
+        return attachments if not step else self.__filter_attachment(attachments, step=step, date=date)
 
     def get_sftp_providers(self, curve_type):
         Provider = self._client.model('tg.comer.provider')
@@ -74,7 +74,6 @@ class ErpUtils(object):
             ],
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
-                ('step_id.name', '=', kwargs.get('step')),
                 ('date', '>=', str(date.date())),
                 ('date', '<', tomorrow)
             ]
@@ -82,11 +81,17 @@ class ErpUtils(object):
 
         return BASE_QUERY[model]
 
-    def __step_filter(self, attachements, step):
-        get_description = itemgetter('description')
-        step_filter = 'Pas: {}'.format(step)
+    def __filter_attachment(self, attachements, step, date):
+        description = itemgetter('description')
+        create_date = itemgetter('create_date')
+        date = date.date()
+
+        step_info = 'Pas: {}'.format(step)
+        is_created_at_date = lambda attach, filter_date: datetime.strptime(
+            create_date(attach), '%Y-%m-%d %H:%M:%S'
+        ).date() == filter_date
 
         return [
             attach for attach in attachements
-            if step_filter in get_description(attach)
+            if step_info in description(attach) and is_created_at_date(attach, date)
         ]
