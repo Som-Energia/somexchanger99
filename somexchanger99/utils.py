@@ -163,8 +163,9 @@ def get_meteologica_files(files2exchange):
         (file_.name, meteo_ftp.get_files_to_download(meteo_ftp.base_dir, file_.pattern, file_.last_upload))
         for file_ in files2exchange
     ]
-    meteo_ftp.close()
+    logger.info("Founded %d preditcion files", len(meteologica_files))
 
+    meteo_ftp.close()
     return meteologica_files
 
 
@@ -190,5 +191,4 @@ def push_meteologica_files(files2upload):
         upload_result[file_type] = num_exchange_files
 
     meteo_ftp.close()
-    logger.info("Founded %d preditcion files", len(meteologica_files))
     return upload_result
