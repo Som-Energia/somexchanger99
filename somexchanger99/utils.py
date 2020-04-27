@@ -9,7 +9,7 @@ from django.utils import timezone
 from .erp_utils import ErpUtils
 from .ftp_utils import FtpUtils
 from .models import Curve2Exchange
-from .sftp_utils import SftpUtils
+from .sftp_utils import SftpUtils, SftpUploadException
 
 ERP = ErpUtils()
 
@@ -42,13 +42,16 @@ def get_attachments(model, date, process, step=None):
 def upload_attach_to_sftp(sftp, attachment, path):
 
     logger.info("Uploading %s to %s", attachment['name'], path)
-
-    attach_conent = base64.decodebytes(
-        attachment['datas'].encode()
-    ).decode('iso-8859-1')
-    sftp.upload_file(attach_conent, attachment['name'], path)
-
-    logger.info("%s succesfully uploaded to %s", attachment['name'], path)
+    try:
+        attach_conent = base64.decodebytes(
+            attachment['datas'].encode()
+        ).decode('iso-8859-1')
+        file_uploaded = sftp.upload_file(attach_conent, attachment['name'], path)
+    except SftpUploadException as e:
+        logger.error(e.message)
+    else:
+        logger.info("%s succesfully uploaded to %s", attachment['name'], path)
+        return file_uploaded
 
 
 def send_attachments(sftp, object_attachment):
@@ -62,6 +65,9 @@ def send_attachments(sftp, object_attachment):
         upload_attach_to_sftp(sftp, attachment, path)
         for attachment in object_attachment['attachments']
     ]
+
+    return '{}{}'.format(object_attachment.get('process'), object_attachment.get('step', '')), len(upload_results)
+
 
 
 def get_curves(curve_name):

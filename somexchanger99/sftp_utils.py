@@ -13,6 +13,10 @@ from pytz.exceptions import AmbiguousTimeError
 logger = logging.getLogger(__name__)
 
 
+class SftpUploadException(Exception):
+    pass
+
+
 class SftpUtils(object):
 
     def __init__(self, host, port, username, password, base_dir):
@@ -45,7 +49,7 @@ class SftpUtils(object):
                 settings.SFTP_CONF['host'],
                 str(e)
             )
-            raise e
+            raise SftpUploadException(e.message) from e
         return os.path.join(remote_path, file_name)
 
     def download_file_content(self, path):
