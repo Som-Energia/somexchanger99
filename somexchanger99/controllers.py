@@ -75,5 +75,5 @@ def exchange_meteologica_predictions():
     for file_type, uploaded_files in upload_res.items():
         exchange_result[file_type]['uploaded'] = uploaded_files
 
-    files2exchange.update(last_upload=now() - timedelta(hours=1))
+    files2exchange.update(last_upload=now())
     return exchange_result

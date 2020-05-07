@@ -34,7 +34,7 @@ class FtpUtils(object):
                     new_path = os.path.join(path, file_name)
                     file_list = file_list + self.get_files_to_download(new_path, pattern, date)
                 try:
-                    file_date = make_aware(parser.parse(file_properties['modify']))
+                    file_date = make_aware(parser.parse(file_properties['modify']), date.tzinfo)
                 except AmbiguousTimeError as e:
                     msg = "An error ocurred in date comparation, reason: %s"
                     logger.error(msg, str(e))
