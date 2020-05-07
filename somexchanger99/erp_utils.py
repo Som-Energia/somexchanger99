@@ -69,13 +69,11 @@ class ErpUtils(object):
         BASE_QUERY = {
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
-                ('data_carrega', '>=', str(date.date())),
-                ('data_carrega', '<', tomorrow)
+                ('write_date', '>=', str(date.date())),
             ],
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
                 ('date', '>=', str(date.date())),
-                ('date', '<', tomorrow)
             ]
         }
 
