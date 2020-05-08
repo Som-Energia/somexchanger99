@@ -73,17 +73,13 @@ class ErpUtils(object):
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
                 ('write_date', '>=', str(date_from.date())),
-            ],
+            ] + [('write_date', '<', str(date_to.date()))] if date_to else [],
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
                 ('date', '>=', str(date_from.date())),
-            ]
+            ] + [('date', '<', str(date_to.date()))] if date_to else []
         }
         query = BASE_QUERY[model]
-
-        if date_to:
-            query.append(('date', '<', str(date_to.date())))
-
         return query
 
     def __filter_attachment(self, attachements, step, date):
