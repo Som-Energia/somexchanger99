@@ -13,7 +13,7 @@ class ErpUtils(object):
     def __init__(self):
         self._client = Client(**settings.ERP_CONF)
 
-    def get_attachments(self, model, date, process, step=None):
+    def get_attachments(self, model, date, process, **kwargs):
         '''
         Obtain file attachments of the process `process` in the step `step`
         associated with the `model` on date `date`.
@@ -23,8 +23,10 @@ class ErpUtils(object):
         `model`: ERP model
         `date`: Creation date
         '''
+        date_to = kwargs.get('date_to')
+        step = kwargs.get('step')
         objects = self._get_objects_with_attachment(
-            model, date, process=process, step=step
+            model, date, process=process, step=step, date_to=date_to
         )
 
         attach_query = [
@@ -63,24 +65,29 @@ class ErpUtils(object):
 
         return objects
 
-    def __get_object_query(self, model, date, **kwargs):
+    def __get_object_query(self, model, date_from, **kwargs):
 
-        tomorrow = str((date + timedelta(days=1)).date())
+        date_to = kwargs.get('date_to')
+
         BASE_QUERY = {
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
-                ('write_date', '>=', str(date.date())),
+                ('write_date', '>=', str(date_from.date())),
             ],
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
-                ('date', '>=', str(date.date())),
+                ('date', '>=', str(date_from.date())),
             ]
         }
+        query = BASE_QUERY[model]
 
-        return BASE_QUERY[model]
+        if date_to:
+            query.append(('date', '<', str(date_to.date())))
+
+        return query
 
     def __filter_attachment(self, attachements, step, date):
-        description = itemgetter('description')
+        description = lambda attach: attach.get('description', '') or ''
         create_date = itemgetter('create_date')
         date = date.date()
 

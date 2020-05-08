@@ -16,15 +16,18 @@ ERP = ErpUtils()
 logger = get_task_logger(__name__)
 
 
-def get_attachments(model, date, process, step=None):
+def get_attachments(model, date, process, **kwargs):
 
     logger.info("Getting attachments of process: %s", process)
+
+    step = kwargs.get('step')
 
     attachments = ERP.get_attachments(
         model=model,
         date=date,
         process=process,
-        step=step
+        step=step,
+        date_to=kwargs.get('date_to')
     )
     attachments_result = {
         'date': str(date.date()),
