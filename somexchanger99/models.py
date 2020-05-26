@@ -100,7 +100,6 @@ class OriginFile(models.Model):
     )
 
     def __str__(self):
-
         return '<OriginFile({name}, code_name:{code_name})>'.format(
             **self.__dict__
         )

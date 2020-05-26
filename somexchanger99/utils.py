@@ -37,8 +37,8 @@ def get_attachments(model, date, process, **kwargs):
     if step:
         attachments_result['step'] = step
 
-    msg = "Founded %s attachments of process: %s"
-    logger.info(msg, len(attachments_result['attachments']), process)
+    msg = "Founded %s attachments of process %s at date %s"
+    logger.info(msg, len(attachments_result['attachments']), process, str(date))
     return attachments_result
 
 
