@@ -1,5 +1,5 @@
 # somexanger99
-exchanging files like hugs. This project is prototype and its deployment in production is not yet stable. 
+exchanging files like hugs. This project is a prototype and its deployment in production is not yet stable. 
 
 #### Prerequisites
 
@@ -39,16 +39,16 @@ Somexanger99 is thought as a background task runner. Once you have configured th
 
 First luch beat process
 ```bash
-user@host:somexchanger> pipenv run celery beat -A config -l info --scheduler  django_celery_beat.schedulers:DatabaseScheduler
+user@host:somexchanger> pipenv run celery beat -A config.celery_app -l info --scheduler  django_celery_beat.schedulers:DatabaseScheduler
 ```
 
 And in other terminal launch the worker:
 ```bash
-user@host:somexchanger> pipenv run celery -A config worker --pool gevent -l info -E
+user@host:somexchanger> pipenv run celery -A config.celery_app worker --pool gevent -l info -E
 ```
 
 #### Usage
-
+WIP
 
 #### Changes
 
