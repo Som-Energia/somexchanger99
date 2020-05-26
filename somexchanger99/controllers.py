@@ -11,9 +11,8 @@ from .utils import (get_attachments, get_curves, get_meteologica_files,
 
 def exchange_xmls():
     sftp = SftpUtils(**settings.SFTP_CONF)
-
     atrs_to_exchange = Atr2Exchange.objects.filter(active=True)
-
+    
     attachments_result = [
         get_attachments(
             model=file2exchange.model,
@@ -75,5 +74,5 @@ def exchange_meteologica_predictions():
     for file_type, uploaded_files in upload_res.items():
         exchange_result[file_type]['uploaded'] = uploaded_files
 
-    files2exchange.update(last_upload=now())
+    files2exchange.update(last_upload=now() - timedelta(hours=1))
     return exchange_result

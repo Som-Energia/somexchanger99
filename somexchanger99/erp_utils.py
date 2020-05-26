@@ -69,6 +69,7 @@ class ErpUtils(object):
 
         date_to = kwargs.get('date_to')
 
+        tomorrow = str((date + timedelta(days=1)).date())
         BASE_QUERY = {
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
