@@ -11,19 +11,30 @@ from .utils import (get_attachments, get_curves, get_meteologica_files,
 
 def exchange_xmls():
     sftp = SftpUtils(**settings.SFTP_CONF)
-    today = datetime.now()
+    atrs_to_exchange = Atr2Exchange.objects.filter(active=True)
+    
     attachments_result = [
         get_attachments(
             model=file2exchange.model,
-            date=today,
+            date=file2exchange.last_upload,
             process=file2exchange.process,
             step=file2exchange.step
         )
-        for file2exchange in Atr2Exchange.objects.filter(active=True)
+        for file2exchange in atrs_to_exchange
     ]
+    exchange_result = {
+        '{}{}'.format(attach.get('process'), attach.get('step', '')): {
+            'downloaded': len(attach['attachments'])
+        } for attach in attachments_result
+    }
 
-    [send_attachments(sftp, attachment) for attachment in attachments_result]
+    upload_result = [send_attachments(sftp, attach) for attach in attachments_result]
+    for process, result in upload_result:
+        exchange_result[process]['uploaded'] = result
+
+    atrs_to_exchange.update(last_upload=now())
     sftp.close_conection()
+    return exchange_result
 
 
 def exchange_curves():

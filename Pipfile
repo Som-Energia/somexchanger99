@@ -13,7 +13,7 @@ pyflakes = "*"
 pylint = "*"
 
 [packages]
-Django = ">=2.2,<4.0"
+Django = ">=2.2,<3.0"
 django-environ = "*"
 psycopg2 = "*"
 celery = "*"

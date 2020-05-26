@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from operator import itemgetter
 
 from django.conf import settings
@@ -13,7 +13,7 @@ class ErpUtils(object):
     def __init__(self):
         self._client = Client(**settings.ERP_CONF)
 
-    def get_attachments(self, model, date, process, step=None):
+    def get_attachments(self, model, date, process, **kwargs):
         '''
         Obtain file attachments of the process `process` in the step `step`
         associated with the `model` on date `date`.
@@ -23,8 +23,10 @@ class ErpUtils(object):
         `model`: ERP model
         `date`: Creation date
         '''
+        date_to = kwargs.get('date_to')
+        step = kwargs.get('step')
         objects = self._get_objects_with_attachment(
-            model, date, process=process, step=step
+            model, date, process=process, step=step, date_to=date_to
         )
 
         attach_query = [
@@ -38,7 +40,7 @@ class ErpUtils(object):
             order='create_date DESC'
         )
 
-        return attachments if not step else self.__step_filter(attachments, step)
+        return attachments if not step else self.__filter_attachment(attachments, step=step, date=date)
 
     def get_sftp_providers(self, curve_type):
         Provider = self._client.model('tg.comer.provider')
@@ -63,30 +65,35 @@ class ErpUtils(object):
 
         return objects
 
-    def __get_object_query(self, model, date, **kwargs):
+    def __get_object_query(self, model, date_from, **kwargs):
+
+        date_to = kwargs.get('date_to')
 
         tomorrow = str((date + timedelta(days=1)).date())
         BASE_QUERY = {
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
-                ('data_carrega', '>=', str(date.date())),
-                ('data_carrega', '<', tomorrow)
-            ],
+                ('write_date', '>=', str(date_from.date())),
+            ] + [('write_date', '<', str(date_to.date()))] if date_to else [],
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
-                ('step_id.name', '=', kwargs.get('step')),
-                ('date', '>=', str(date.date())),
-                ('date', '<', tomorrow)
-            ]
+                ('date', '>=', str(date_from.date())),
+            ] + [('date', '<', str(date_to.date()))] if date_to else []
         }
+        query = BASE_QUERY[model]
+        return query
 
-        return BASE_QUERY[model]
+    def __filter_attachment(self, attachements, step, date):
+        description = lambda attach: attach.get('description', '') or ''
+        create_date = itemgetter('create_date')
+        date = date.date()
 
-    def __step_filter(self, attachements, step):
-        get_description = itemgetter('description')
-        step_filter = 'Pas: {}'.format(step)
+        step_info = 'Pas: {}'.format(step)
+        is_created_at_date = lambda attach, filter_date: datetime.strptime(
+            create_date(attach), '%Y-%m-%d %H:%M:%S'
+        ).date() == filter_date
 
         return [
             attach for attach in attachements
-            if step_filter in get_description(attach)
+            if step_info in description(attach) and is_created_at_date(attach, date)
         ]

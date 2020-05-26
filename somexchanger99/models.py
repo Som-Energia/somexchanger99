@@ -29,6 +29,13 @@ class Atr2Exchange(models.Model):
         help_text=_('Shows if this kind of files will be exchanged')
     )
 
+    last_upload = models.DateTimeField(
+        verbose_name=_('Last date uploaded'),
+        help_text=_('Last time this atr process was uploaded'),
+        null=True,
+        blank=True
+    )
+
     def __str__(self):
         exchange_attrs = '{process}, {model}' if not self.step \
                          else '{process}, {step}, {model}'
@@ -93,7 +100,6 @@ class OriginFile(models.Model):
     )
 
     def __str__(self):
-
         return '<OriginFile({name}, code_name:{code_name})>'.format(
             **self.__dict__
         )
