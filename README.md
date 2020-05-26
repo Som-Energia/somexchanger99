@@ -52,6 +52,11 @@ WIP
 
 #### Changes
 
+##### v0.1.0
+* Exchange files between ftps
+* Exchange files between sftps
+* Exchange files between sftps and [powerERP](https://github.com/gisce/erp)
+
 
 #### Contact
 If you want to contact with us, feel free to send an email to <info@somenergia.coop>.
