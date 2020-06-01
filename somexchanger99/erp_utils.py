@@ -69,16 +69,15 @@ class ErpUtils(object):
 
         date_to = kwargs.get('date_to')
 
-        tomorrow = str((date + timedelta(days=1)).date())
         BASE_QUERY = {
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
                 ('write_date', '>=', str(date_from.date())),
-            ] + [('write_date', '<', str(date_to.date()))] if date_to else [],
+            ] + ([('write_date', '<', str(date_to.date()))] if date_to else []),
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
                 ('date', '>=', str(date_from.date())),
-            ] + [('date', '<', str(date_to.date()))] if date_to else []
+            ] + ([('date', '<', str(date_to.date()))] if date_to else [])
         }
         query = BASE_QUERY[model]
         return query

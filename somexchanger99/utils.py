@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 from celery.utils.log import get_task_logger
+from dateutil import parser
 from django.conf import settings
 from django.utils import timezone
 
@@ -58,14 +59,17 @@ def upload_attach_to_sftp(sftp, attachment, path):
 
 
 def send_attachments(sftp, object_attachment):
-    path = os.path.join(
+    path = lambda date: os.path.join(
         settings.SFTP_CONF['base_dir'],
-        object_attachment['date'],
+        str(date),
         object_attachment['process'],
         object_attachment.get('step', '')
     )
+
     upload_results = [
-        upload_attach_to_sftp(sftp, attachment, path)
+        upload_attach_to_sftp(
+            sftp, attachment, path(parser.parse(attachment['create_date']).date())
+        )
         for attachment in object_attachment['attachments']
     ]
 
