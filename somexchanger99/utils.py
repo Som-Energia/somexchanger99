@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 from celery.utils.log import get_task_logger
+from dateutil import parser
 from django.conf import settings
 from django.utils import timezone
 
@@ -17,10 +18,13 @@ logger = get_task_logger(__name__)
 
 
 def get_attachments(model, date, process, **kwargs):
-
-    logger.info("Getting attachments of process: %s", process)
-
     step = kwargs.get('step')
+    msg = "{process}{step}{date}".format(
+        process="Getting attachments of proces %s ",
+        step="step %s " if step else "%s",
+        date="at date %s"
+    )
+    logger.info(msg, process, step or '', str(date))
 
     attachments = ERP.get_attachments(
         model=model,
@@ -58,14 +62,17 @@ def upload_attach_to_sftp(sftp, attachment, path):
 
 
 def send_attachments(sftp, object_attachment):
-    path = os.path.join(
+    path = lambda date: os.path.join(
         settings.SFTP_CONF['base_dir'],
-        object_attachment['date'],
+        str(date),
         object_attachment['process'],
         object_attachment.get('step', '')
     )
+
     upload_results = [
-        upload_attach_to_sftp(sftp, attachment, path)
+        upload_attach_to_sftp(
+            sftp, attachment, path(parser.parse(attachment['create_date']).date())
+        )
         for attachment in object_attachment['attachments']
     ]
 
@@ -200,5 +207,4 @@ def push_meteologica_files(files2upload):
         upload_result[file_type] = num_exchange_files
 
     meteo_ftp.close()
-    logger.info("Founded %d preditcion files", len(meteologica_files))
     return upload_result
