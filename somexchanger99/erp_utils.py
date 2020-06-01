@@ -2,6 +2,7 @@ from datetime import datetime
 from operator import itemgetter
 
 from celery.utils.log import get_task_logger
+from dateutil import parser
 from django.conf import settings
 from erppeek import Client
 
@@ -86,12 +87,10 @@ class ErpUtils(object):
     def __filter_attachment(self, attachements, step, date):
         description = lambda attach: attach.get('description', '') or ''
         create_date = itemgetter('create_date')
-        date = date.date()
 
         step_info = 'Pas: {}'.format(step)
-        is_created_at_date = lambda attach, filter_date: datetime.strptime(
-            create_date(attach), '%Y-%m-%d %H:%M:%S'
-        ).date() == filter_date
+        is_created_at_date = lambda attach, filter_date: \
+            parser.parse(create_date(attach)) >= filter_date
 
         return [
             attach for attach in attachements
