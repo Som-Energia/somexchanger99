@@ -1,11 +1,11 @@
-import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from operator import itemgetter
 
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from erppeek import Client
 
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 class ErpUtils(object):
@@ -80,6 +80,7 @@ class ErpUtils(object):
             ] + ([('date', '<', str(date_to.date()))] if date_to else [])
         }
         query = BASE_QUERY[model]
+        logger.info(query)
         return query
 
     def __filter_attachment(self, attachements, step, date):
