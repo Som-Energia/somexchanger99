@@ -1,9 +1,9 @@
-from datetime import datetime
 from operator import itemgetter
 
 from celery.utils.log import get_task_logger
 from dateutil import parser
 from django.conf import settings
+from django.utils.timezone import make_aware
 from erppeek import Client
 
 logger = get_task_logger(__name__)
@@ -89,10 +89,10 @@ class ErpUtils(object):
         create_date = itemgetter('create_date')
 
         step_info = 'Pas: {}'.format(step)
-        is_created_at_date = lambda attach, filter_date: \
-            parser.parse(create_date(attach)) >= filter_date
+        is_created_from_date = lambda attach, from_date: \
+            make_aware(parser.parse(create_date(attach)), from_date.tzinfo) >= from_date
 
         return [
             attach for attach in attachements
-            if step_info in description(attach) and is_created_at_date(attach, date)
+            if step_info in description(attach) and is_created_from_date(attach, date)
         ]
