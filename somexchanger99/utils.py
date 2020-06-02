@@ -103,7 +103,7 @@ def get_curves(curve_name):
             )
             files_to_exchange[provider['name']] = sftp.get_files_to_download(
                 path=provider['root_dir'],
-                pattern=provider[curve.pattern],
+                pattern=curve.pattern,
                 date=curve.last_upload or timezone.now() - timedelta(days=1)
             )
         except Exception as e:
