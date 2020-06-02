@@ -7,9 +7,9 @@ from dateutil import parser
 from django.conf import settings
 from django.utils import timezone
 
+from curves_exchange.models import Curve2Exchange, ProviderConnection
 from .erp_utils import ErpUtils
 from .ftp_utils import FtpUtils
-from .models import Curve2Exchange
 from .sftp_utils import SftpUtils, SftpUploadException
 
 ERP = ErpUtils()
@@ -79,7 +79,6 @@ def send_attachments(sftp, object_attachment):
     return '{}{}'.format(object_attachment.get('process'), object_attachment.get('step', '')), len(upload_results)
 
 
-
 def get_curves(curve_name):
     '''
     Get curves of `curve_type` from all providers defined in ERP
@@ -87,30 +86,30 @@ def get_curves(curve_name):
     '''
     sftp = None
     files_to_exchange = dict()
-    curve = Curve2Exchange.objects.get(erp_name=curve_name)
-    erp_utils = ErpUtils()
 
-    providers_sftp = erp_utils.get_sftp_providers(curve.erp_name)
-    for provider in providers_sftp:
-        logger.info("Getting %s curves from %s", curve_name, provider['host'])
+    curve = Curve2Exchange.objects.get(name=curve_name)
+    providers = ProviderConnection.objects.filter(
+        active=True, curve2exchange=curve
+    )
+    for provider in providers:
+        logger.info("Getting %s curves from %s", curve_name, provider.host)
         try:
             sftp = SftpUtils(
-                host=provider['host'],
-                port=provider['port'],
-                username=provider['user'],
-                password=provider.get('password') or  '',
-                base_dir=provider['root_dir']
+                host=provider.host,
+                port=provider.port,
+                username=provider.username,
+                password=provider.password,
+                base_dir=provider.base_dir
             )
-            pattern = '{}_syntax'.format(curve_name)
-            files_to_exchange[provider['name']] = sftp.get_files_to_download(
-                path=provider['root_dir'],
-                pattern=provider[pattern],
+            files_to_exchange[provider.name] = sftp.get_files_to_download(
+                path=provider.base_dir,
+                pattern=curve.pattern,
                 date=curve.last_upload or timezone.now() - timedelta(days=1)
             )
         except Exception as e:
             msg = "An uncontroled error happened getting curves from: "\
                   "%s, reason: %s"
-            logger.exception(msg, provider['id'], str(e))
+            logger.exception(msg, provider.name, str(e))
         finally:
             if sftp:
                 sftp.close_conection()
@@ -137,18 +136,20 @@ def push_curves(curve2exchange, curves_files):
             password=settings.SFTP_CONF['password'],
             base_dir=curve2exchange.name
         )
-        providers_sftp = erp_utils.get_sftp_providers(curve2exchange.erp_name)
-        for provider in providers_sftp:
+        providers = ProviderConnection.objects.filter(
+            active=True, curve2exchange=curve2exchange
+        )
+        for provider in providers:
             num_exchange_files = 0
             try:
                 sftp = SftpUtils(
-                    host=provider['host'],
-                    port=provider['port'],
-                    username=provider['user'],
-                    password=provider.get('password') or '',
-                    base_dir=provider['root_dir']
+                    host=provider.host,
+                    port=provider.port,
+                    username=provider.username,
+                    password=provider.password,
+                    base_dir=provider.base_dir
                 )
-                for path, filename in curves_files[provider['name']]:
+                for path, filename in curves_files[provider.name]:
                     content_file = sftp.download_file_content(path)
                     logger.info("Uploading file %s to exchange sftp", filename)
                     neuro_sftp.upload_file(
@@ -162,7 +163,10 @@ def push_curves(curve2exchange, curves_files):
                       "process, reason: %s"
                 logger.exception(msg, str(e))
             finally:
-                upload_result[provider['name']] = num_exchange_files
+                if sftp:
+                    sftp.close_conection()
+                    sftp = None
+                upload_result[provider.name] = num_exchange_files
     except Exception as e:
         logger.exception("An uncontroled error happened, reason: %s", str(e))
     finally:
