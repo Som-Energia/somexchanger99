@@ -140,28 +140,32 @@ def push_curves(curve2exchange, curves_files):
         for provider in providers_sftp:
             num_exchange_files = 0
             try:
-                sftp = SftpUtils(
-                    host=provider['host'],
-                    port=provider['port'],
-                    username=provider['user'],
-                    password=provider.get('password') or '',
-                    base_dir=provider['root_dir']
-                )
-                for path, filename in curves_files[provider['name']]:
-                    content_file = sftp.download_file_content(path)
-                    logger.info("Uploading file %s to exchange sftp", filename)
-                    neuro_sftp.upload_file(
-                        content_file,
-                        filename,
-                        os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+                if curves_files[provider['name']]:
+                    sftp = SftpUtils(
+                        host=provider['host'],
+                        port=provider['port'],
+                        username=provider['user'],
+                        password=provider.get('password') or '',
+                        base_dir=provider['root_dir']
                     )
-                    num_exchange_files += 1
+                    for path, filename in curves_files[provider['name']]:
+                        content_file = sftp.download_file_content(path)
+                        logger.info("Uploading file %s to exchange sftp", filename)
+                        neuro_sftp.upload_file(
+                            content_file,
+                            filename,
+                            os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+                        )
+                        num_exchange_files += 1
             except Exception as e:
                 msg = "An uncontroled error happened during uploading "\
                       "process, reason: %s"
                 logger.exception(msg, str(e))
             finally:
                 upload_result[provider['name']] = num_exchange_files
+                if sftp:
+                    sftp.close_conection()
+                    sftp = None
     except Exception as e:
         logger.exception("An uncontroled error happened, reason: %s", str(e))
     finally:
@@ -206,4 +210,5 @@ def push_meteologica_files(files2upload):
         upload_result[file_type] = num_exchange_files
 
     meteo_ftp.close()
+    enexpa_sftp.close_conection()
     return upload_result
