@@ -140,7 +140,7 @@ def push_curves(curve2exchange, curves_files):
         for provider in providers_sftp:
             num_exchange_files = 0
             try:
-                if curves_files[provider['name']]:
+                if curves_files.get(provider['name']):
                     sftp = SftpUtils(
                         host=provider['host'],
                         port=provider['port'],
