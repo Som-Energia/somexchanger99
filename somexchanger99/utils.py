@@ -87,7 +87,7 @@ def get_curves(curve_name):
     '''
     sftp = None
     files_to_exchange = dict()
-    curve = Curve2Exchange.objects.get(erp_name=curve_name)
+    curve = Curve2Exchange.objects.get(name=curve_name)
     erp_utils = ErpUtils()
 
     providers_sftp = erp_utils.get_sftp_providers(curve.erp_name)
