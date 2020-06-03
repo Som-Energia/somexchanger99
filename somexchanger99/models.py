@@ -63,6 +63,13 @@ class Curve2Exchange(models.Model):
         null=True
     )
 
+    pattern = models.CharField(
+        max_length=128,
+        verbose_name=_('Pattern'),
+        help_text=_('Patern of the curve file'),
+        null=False
+    )
+
     active = models.BooleanField(
         verbose_name=_('Active'),
         help_text=_('Check to enable or disable exchange this kind of curves')

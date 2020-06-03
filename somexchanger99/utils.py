@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 from celery.utils.log import get_task_logger
+from dateutil import parser
 from django.conf import settings
 from django.utils import timezone
 
@@ -17,10 +18,13 @@ logger = get_task_logger(__name__)
 
 
 def get_attachments(model, date, process, **kwargs):
-
-    logger.info("Getting attachments of process: %s", process)
-
     step = kwargs.get('step')
+    msg = "{process}{step}{date}".format(
+        process="Getting attachments of proces %s ",
+        step="step %s " if step else "%s",
+        date="at date %s"
+    )
+    logger.info(msg, process, step or '', str(date))
 
     attachments = ERP.get_attachments(
         model=model,
@@ -58,14 +62,17 @@ def upload_attach_to_sftp(sftp, attachment, path):
 
 
 def send_attachments(sftp, object_attachment):
-    path = os.path.join(
+    path = lambda date: os.path.join(
         settings.SFTP_CONF['base_dir'],
-        object_attachment['date'],
+        str(date),
         object_attachment['process'],
         object_attachment.get('step', '')
     )
+
     upload_results = [
-        upload_attach_to_sftp(sftp, attachment, path)
+        upload_attach_to_sftp(
+            sftp, attachment, path(parser.parse(attachment['create_date']).date())
+        )
         for attachment in object_attachment['attachments']
     ]
 
@@ -80,7 +87,7 @@ def get_curves(curve_name):
     '''
     sftp = None
     files_to_exchange = dict()
-    curve = Curve2Exchange.objects.get(erp_name=curve_name)
+    curve = Curve2Exchange.objects.get(name=curve_name)
     erp_utils = ErpUtils()
 
     providers_sftp = erp_utils.get_sftp_providers(curve.erp_name)
@@ -94,10 +101,9 @@ def get_curves(curve_name):
                 password=provider.get('password') or  '',
                 base_dir=provider['root_dir']
             )
-            pattern = '{}_syntax'.format(curve_name)
             files_to_exchange[provider['name']] = sftp.get_files_to_download(
                 path=provider['root_dir'],
-                pattern=provider[pattern],
+                pattern=curve.pattern,
                 date=curve.last_upload or timezone.now() - timedelta(days=1)
             )
         except Exception as e:
@@ -134,28 +140,32 @@ def push_curves(curve2exchange, curves_files):
         for provider in providers_sftp:
             num_exchange_files = 0
             try:
-                sftp = SftpUtils(
-                    host=provider['host'],
-                    port=provider['port'],
-                    username=provider['user'],
-                    password=provider.get('password') or '',
-                    base_dir=provider['root_dir']
-                )
-                for path, filename in curves_files[provider['name']]:
-                    content_file = sftp.download_file_content(path)
-                    logger.info("Uploading file %s to exchange sftp", filename)
-                    neuro_sftp.upload_file(
-                        content_file,
-                        filename,
-                        os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+                if curves_files.get(provider['name']):
+                    sftp = SftpUtils(
+                        host=provider['host'],
+                        port=provider['port'],
+                        username=provider['user'],
+                        password=provider.get('password') or '',
+                        base_dir=provider['root_dir']
                     )
-                    num_exchange_files += 1
+                    for path, filename in curves_files[provider['name']]:
+                        content_file = sftp.download_file_content(path)
+                        logger.info("Uploading file %s to exchange sftp", filename)
+                        neuro_sftp.upload_file(
+                            content_file,
+                            filename,
+                            os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+                        )
+                        num_exchange_files += 1
             except Exception as e:
                 msg = "An uncontroled error happened during uploading "\
                       "process, reason: %s"
                 logger.exception(msg, str(e))
             finally:
                 upload_result[provider['name']] = num_exchange_files
+                if sftp:
+                    sftp.close_conection()
+                    sftp = None
     except Exception as e:
         logger.exception("An uncontroled error happened, reason: %s", str(e))
     finally:
@@ -200,5 +210,5 @@ def push_meteologica_files(files2upload):
         upload_result[file_type] = num_exchange_files
 
     meteo_ftp.close()
-    logger.info("Founded %d preditcion files", len(meteologica_files))
+    enexpa_sftp.close_conection()
     return upload_result

@@ -1,11 +1,12 @@
-import logging
-from datetime import datetime, timedelta
 from operator import itemgetter
 
+from celery.utils.log import get_task_logger
+from dateutil import parser
 from django.conf import settings
+from django.utils.timezone import make_aware
 from erppeek import Client
 
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 class ErpUtils(object):
@@ -69,31 +70,29 @@ class ErpUtils(object):
 
         date_to = kwargs.get('date_to')
 
-        tomorrow = str((date + timedelta(days=1)).date())
         BASE_QUERY = {
             'giscedata.facturacio.importacio.linia': [
                 ('state', '=', 'valid'),
                 ('write_date', '>=', str(date_from.date())),
-            ] + [('write_date', '<', str(date_to.date()))] if date_to else [],
+            ] + ([('write_date', '<', str(date_to.date()))] if date_to else []),
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
                 ('date', '>=', str(date_from.date())),
-            ] + [('date', '<', str(date_to.date()))] if date_to else []
+            ] + ([('date', '<', str(date_to.date()))] if date_to else [])
         }
         query = BASE_QUERY[model]
+        logger.info(query)
         return query
 
     def __filter_attachment(self, attachements, step, date):
         description = lambda attach: attach.get('description', '') or ''
         create_date = itemgetter('create_date')
-        date = date.date()
 
         step_info = 'Pas: {}'.format(step)
-        is_created_at_date = lambda attach, filter_date: datetime.strptime(
-            create_date(attach), '%Y-%m-%d %H:%M:%S'
-        ).date() == filter_date
+        is_created_from_date = lambda attach, from_date: \
+            make_aware(parser.parse(create_date(attach)), from_date.tzinfo) >= from_date
 
         return [
             attach for attach in attachements
-            if step_info in description(attach) and is_created_at_date(attach, date)
+            if step_info in description(attach) and is_created_from_date(attach, date)
         ]

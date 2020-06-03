@@ -52,6 +52,11 @@ WIP
 
 #### Changes
 
+##### v0.1.1
+* Fix search query and filters in erp utils
+* Add pattern in curve2exchange model
+* minor fixes
+
 ##### v0.1.0
 * Exchange files between ftps
 * Exchange files between sftps
