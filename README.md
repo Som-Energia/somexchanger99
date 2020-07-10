@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.1.2
+* Fix date meaning when saving files in sftps. Now is the day that de process was launched
+
 ##### v0.1.1
 * Fix search query and filters in erp utils
 * Add pattern in curve2exchange model
