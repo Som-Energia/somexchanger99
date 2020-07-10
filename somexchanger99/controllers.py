@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.utils.timezone import now
@@ -12,6 +12,8 @@ from .utils import (get_attachments, get_curves, get_meteologica_files,
 def exchange_xmls():
     sftp = SftpUtils(**settings.SFTP_CONF)
     atrs_to_exchange = Atr2Exchange.objects.filter(active=True)
+
+    timestamp = datetime.now()
 
     attachments_result = [
         get_attachments(
@@ -28,7 +30,9 @@ def exchange_xmls():
         } for attach in attachments_result
     }
 
-    upload_result = [send_attachments(sftp, attach) for attach in attachments_result]
+    upload_result = [
+        send_attachments(sftp, attach, timestamp) for attach in attachments_result
+    ]
     for process, result in upload_result:
         exchange_result[process]['uploaded'] = result
 

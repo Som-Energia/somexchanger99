@@ -34,7 +34,6 @@ def get_attachments(model, date, process, **kwargs):
         date_to=kwargs.get('date_to')
     )
     attachments_result = {
-        'date': str(date.date()),
         'process': process,
         'attachments': attachments
     }
@@ -61,17 +60,17 @@ def upload_attach_to_sftp(sftp, attachment, path):
         return file_uploaded
 
 
-def send_attachments(sftp, object_attachment):
-    path = lambda date: os.path.join(
+def send_attachments(sftp, object_attachment, when):
+    path = os.path.join(
         settings.SFTP_CONF['base_dir'],
-        str(date),
+        str(when.date()),
         object_attachment['process'],
         object_attachment.get('step', '')
     )
 
     upload_results = [
         upload_attach_to_sftp(
-            sftp, attachment, path(parser.parse(attachment['create_date']).date())
+            sftp, attachment, path
         )
         for attachment in object_attachment['attachments']
     ]
