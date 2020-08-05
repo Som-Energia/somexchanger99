@@ -3,7 +3,6 @@ import os
 from datetime import datetime, timedelta
 
 from celery.utils.log import get_task_logger
-from dateutil import parser
 from django.conf import settings
 from django.utils import timezone
 
@@ -75,8 +74,10 @@ def send_attachments(sftp, object_attachment, when):
         for attachment in object_attachment['attachments']
     ]
 
-    return '{}{}'.format(object_attachment.get('process'), object_attachment.get('step', '')), len(upload_results)
-
+    return '{}{}'.format(
+        object_attachment.get('process'),
+        object_attachment.get('step', '')
+    ), len(upload_results)
 
 
 def get_curves(curve_name):
@@ -113,8 +114,6 @@ def get_curves(curve_name):
             if sftp:
                 sftp.close_conection()
                 sftp = None
-    curve.last_upload = timezone.now()
-    curve.save()
     return files_to_exchange
 
 

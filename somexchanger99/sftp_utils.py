@@ -71,7 +71,8 @@ class SftpUtils(object):
                     match_file = re.match(pattern, file_.filename) and \
                                  make_aware(dt.fromtimestamp(file_.st_mtime)) >= date
                 except AmbiguousTimeError as e:
-                    logger.error("An error ocurred in date comparation, reason: %s", str(e))
+                    msg = "An error ocurred in date comparation for file %s, reason: %s"
+                    logger.error(msg, file_.filename, str(e))
                 else:
                     if match_file:
                         file_list.append(

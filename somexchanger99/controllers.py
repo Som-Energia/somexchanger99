@@ -59,6 +59,9 @@ def exchange_curves():
 
         exchange_result[curve.name] = exchange_status
 
+        curve.last_upload = now()
+        curve.save()
+
     return exchange_result
 
 
