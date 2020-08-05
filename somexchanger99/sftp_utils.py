@@ -59,6 +59,8 @@ class SftpUtils(object):
         return content
 
     def get_files_to_download(self, path, pattern, date):
+        msg = "Getting files from %s that match pattern %s and are newer than %s"
+        logger.debug(msg, path, pattern, str(date))
         file_list = []
 
         try:

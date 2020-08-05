@@ -8,7 +8,6 @@ from django.utils import timezone
 
 from .erp_utils import ErpUtils
 from .ftp_utils import FtpUtils
-from .models import Curve2Exchange
 from .sftp_utils import SftpUtils, SftpUploadException
 
 ERP = ErpUtils()
@@ -80,32 +79,33 @@ def send_attachments(sftp, object_attachment, when):
     ), len(upload_results)
 
 
-def get_curves(curve_name):
+def get_curves(curve):
     '''
     Get curves of `curve_type` from all providers defined in ERP
     curve_name: technical name of the curve.
     '''
     sftp = None
     files_to_exchange = dict()
-    curve = Curve2Exchange.objects.get(name=curve_name)
     erp_utils = ErpUtils()
 
-    providers_sftp = erp_utils.get_sftp_providers(curve.erp_name)
+    providers_sftp = erp_utils.get_sftp_providers()
     for provider in providers_sftp:
-        logger.info("Getting %s curves from %s", curve_name, provider['host'])
+        logger.info("Getting %s curves from %s", curve.name, provider['host'])
         try:
             sftp = SftpUtils(
                 host=provider['host'],
                 port=provider['port'],
                 username=provider['user'],
-                password=provider.get('password') or  '',
+                password=provider.get('password') or '',
                 base_dir=provider['root_dir']
             )
-            files_to_exchange[provider['name']] = sftp.get_files_to_download(
+            files_to_download = sftp.get_files_to_download(
                 path=provider['root_dir'],
                 pattern=curve.pattern,
                 date=curve.last_upload or timezone.now() - timedelta(days=1)
             )
+            logger.debug("Files found from %s: %s", provider['host'], str(files_to_download))
+            files_to_exchange[provider['name']] = files_to_download
         except Exception as e:
             msg = "An uncontroled error happened getting curves from: "\
                   "%s, reason: %s"

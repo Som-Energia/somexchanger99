@@ -46,7 +46,7 @@ def exchange_curves():
 
     curves_to_exchage = Curve2Exchange.objects.filter(active=True)
     for curve in curves_to_exchage:
-        curves_files = get_curves(curve.name)
+        curves_files = get_curves(curve)
         exchange_status = {
             distri: {'downloaded': len(curves_to_exchage)}
             for distri, curves_to_exchage in curves_files.items()
