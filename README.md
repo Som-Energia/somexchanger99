@@ -51,6 +51,10 @@ user@host:somexchanger> pipenv run celery -A config.celery_app worker --pool gev
 WIP
 
 #### Changes
+##### v0.1.3
+* Fix save date in curve exchange proces.
+* Added more logs to better tracking
+* minor changes
 
 ##### v0.1.2
 * Fix date meaning when saving files in sftps. Now is the day that de process was launched
