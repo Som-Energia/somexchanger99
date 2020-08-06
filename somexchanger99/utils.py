@@ -134,7 +134,7 @@ def push_curves(curve2exchange, curves_files):
             password=settings.SFTP_CONF['password'],
             base_dir=curve2exchange.name
         )
-        providers_sftp = erp_utils.get_sftp_providers(curve2exchange.erp_name)
+        providers_sftp = erp_utils.get_sftp_providers()
         for provider in providers_sftp:
             num_exchange_files = 0
             try:

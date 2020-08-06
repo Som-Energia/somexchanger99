@@ -12,7 +12,7 @@ class Atr2ExchangeAdmin(admin.ModelAdmin):
 @admin.register(Curve2Exchange)
 class Curve2ExchangeAdmin(admin.ModelAdmin):
 
-    list_display = ('__str__', 'name', 'active')
+    list_display = ('__str__', 'name', 'last_upload', 'active')
 
 
 @admin.register(File2Exchange)
