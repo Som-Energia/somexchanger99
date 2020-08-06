@@ -37,7 +37,7 @@ def exchange_xmls():
         exchange_result[process]['uploaded'] = result
 
     atrs_to_exchange.update(last_upload=now())
-    sftp.close_conection()
+    sftp.close_connection()
     return exchange_result
 
 

@@ -34,7 +34,7 @@ class Command(BaseCommand):
             raise MayBeFTPException()
         finally:
             if sftp:
-                sftp.close_conection()
+                sftp.close_connection()
 
     def try_ftp(self, provider):
         ftp = None
