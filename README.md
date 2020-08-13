@@ -51,6 +51,12 @@ user@host:somexchanger> pipenv run celery -A config.celery_app worker --pool gev
 WIP
 
 #### Changes
+##### v0.1.4
+* Added check_connection command
+* Fix transport key exchange algorithms
+* Unify API between SFTP and FTP classes
+* Typos
+
 ##### v0.1.3
 * Fix save date in curve exchange proces.
 * Added more logs to better tracking
