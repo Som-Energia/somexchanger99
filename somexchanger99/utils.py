@@ -2,6 +2,7 @@ import base64
 import os
 from datetime import datetime, timedelta
 
+import paramiko
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.utils import timezone
@@ -79,6 +80,29 @@ def send_attachments(sftp, object_attachment, when):
     ), len(upload_results)
 
 
+def get_conn(provider):
+    try:
+        conn = SftpUtils(
+            host=provider['host'],
+            port=provider['port'],
+            username=provider['user'],
+            password=provider.get('password') or '',
+            base_dir=provider['root_dir']
+        )
+    except paramiko.ssh_exception.SSHException:
+        conn = FtpUtils(
+            host=provider['host'],
+            username=provider['user'],
+            password=provider.get('password') or '',
+            base_dir=provider['root_dir']
+        )
+        return conn
+    except Exception as e:
+        raise e
+    else:
+        return conn
+
+
 def get_curves(curve):
     '''
     Get curves of `curve_type` from all providers defined in ERP
@@ -92,13 +116,7 @@ def get_curves(curve):
     for provider in providers_sftp:
         logger.info("Getting %s curves from %s", curve.name, provider['host'])
         try:
-            sftp = SftpUtils(
-                host=provider['host'],
-                port=provider['port'],
-                username=provider['user'],
-                password=provider.get('password') or '',
-                base_dir=provider['root_dir']
-            )
+            sftp = get_conn(provider)
             files_to_download = sftp.get_files_to_download(
                 path=provider['root_dir'],
                 pattern=curve.pattern,
@@ -112,7 +130,7 @@ def get_curves(curve):
             logger.exception(msg, provider['id'], str(e))
         finally:
             if sftp:
-                sftp.close_conection()
+                sftp.close_connection()
                 sftp = None
     return files_to_exchange
 
@@ -139,13 +157,7 @@ def push_curves(curve2exchange, curves_files):
             num_exchange_files = 0
             try:
                 if curves_files.get(provider['name']):
-                    sftp = SftpUtils(
-                        host=provider['host'],
-                        port=provider['port'],
-                        username=provider['user'],
-                        password=provider.get('password') or '',
-                        base_dir=provider['root_dir']
-                    )
+                    sftp = get_conn(provider)
                     for path, filename in curves_files[provider['name']]:
                         content_file = sftp.download_file_content(path)
                         logger.info("Uploading file %s to exchange sftp", filename)
@@ -162,12 +174,12 @@ def push_curves(curve2exchange, curves_files):
             finally:
                 upload_result[provider['name']] = num_exchange_files
                 if sftp:
-                    sftp.close_conection()
+                    sftp.close_connection()
                     sftp = None
     except Exception as e:
         logger.exception("An uncontroled error happened, reason: %s", str(e))
     finally:
-        neuro_sftp.close_conection()
+        neuro_sftp.close_connection()
         return upload_result
 
 
@@ -182,7 +194,7 @@ def get_meteologica_files(files2exchange):
     ]
     logger.info("Founded %d preditcion files", len(meteologica_files))
 
-    meteo_ftp.close()
+    meteo_ftp.close_connection()
     return meteologica_files
 
 
@@ -207,6 +219,6 @@ def push_meteologica_files(files2upload):
             num_exchange_files += 1
         upload_result[file_type] = num_exchange_files
 
-    meteo_ftp.close()
-    enexpa_sftp.close_conection()
+    meteo_ftp.close_connection()
+    enexpa_sftp.close_connection()
     return upload_result

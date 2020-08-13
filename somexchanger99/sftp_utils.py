@@ -10,6 +10,10 @@ from paramiko.sftp_client import SFTPClient
 from paramiko.transport import Transport
 from pytz.exceptions import AmbiguousTimeError
 
+paramiko_logger = logging.getLogger('paramiko.transport')
+paramiko_logger.addHandler(logging.NullHandler())
+paramiko_logger.propagate = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,9 +27,22 @@ class SftpUtils(object):
         self.__transport = Transport(
             (host, int(port))
         )
-        self.__transport.connect(
-            None, username, password
+
+        self.__transport._preferred_kex = (
+            'ecdh-sha2-nistp256',
+            'ecdh-sha2-nistp384',
+            'ecdh-sha2-nistp521',
+            'diffie-hellman-group-exchange-sha256',
+            'diffie-hellman-group14-sha256',
+            'diffie-hellman-group-exchange-sha1',
+            'diffie-hellman-group14-sha1',
+            'diffie-hellman-group1-sha1',
         )
+
+        self.__transport.start_client()
+        self.__transport.get_remote_server_key()
+        self.__transport.auth_password(username, password)
+
         self._client = SFTPClient.from_transport(self.__transport)
 
         self._base_remote_dir = base_dir
@@ -89,7 +106,7 @@ class SftpUtils(object):
         finally:
             return file_list
 
-    def close_conection(self):
+    def close_connection(self):
         if self._client is not None:
             self._client.close()
 
