@@ -80,6 +80,9 @@ class SftpUtils(object):
         msg = "Getting files from %s that match pattern %s and are newer than %s"
         logger.debug(msg, path, pattern, str(date_from))
         mtime = attrgetter('st_mtime')
+        mtime_aware = lambda timestamp, tzinfo: make_aware(
+            dt.fromtimestamp(timestamp), tzinfo
+        )
         file_list = []
 
         try:
@@ -93,16 +96,16 @@ class SftpUtils(object):
                         new_path, pattern, date_from, date_to
                     )
                 try:
-                    if make_aware(dt.fromtimestamp(file_.st_mtime)) < date_from:
+                    if mtime_aware(file_.st_mtime, date_from.tzinfo) < date_from:
                         break
 
                     match_file_conditions = [
                         re.match(pattern, file_.filename),
-                        make_aware(dt.fromtimestamp(file_.st_mtime)) >= date_from
+                        mtime_aware(file_.st_mtime, date_from.tzinfo) >= date_from
                     ]
                     if date_to:
                         match_file_conditions.append(
-                            make_aware(dt.fromtimestamp(file_.st_mtime)) < date_from
+                            mtime_aware(file_.st_mtime, date_from.tzinfo) < date_to
                         )
                 except AmbiguousTimeError as e:
                     msg = "An error ocurred in date comparation for file %s, reason: %s"
