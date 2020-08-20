@@ -51,6 +51,12 @@ user@host:somexchanger> pipenv run celery -A config.celery_app worker --pool gev
 WIP
 
 #### Changes
+
+##### v0.1.5
+* get_files_to_download now stops searching when a file is older than the initial date
+* added `date_to` parameter to get_files_to_download to search between two dates
+* fixed makeaware timestamps
+
 ##### v0.1.4
 * Added check_connection command
 * Fix transport key exchange algorithms
