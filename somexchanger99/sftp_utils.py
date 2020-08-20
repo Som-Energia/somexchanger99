@@ -3,6 +3,7 @@ import os
 import re
 import stat
 from datetime import datetime as dt
+from operator import attrgetter
 
 from django.conf import settings
 from django.utils.timezone import make_aware
@@ -75,25 +76,42 @@ class SftpUtils(object):
 
         return content
 
-    def get_files_to_download(self, path, pattern, date):
+    def get_files_to_download(self, path, pattern, date_from, date_to=None):
         msg = "Getting files from %s that match pattern %s and are newer than %s"
-        logger.debug(msg, path, pattern, str(date))
+        logger.debug(msg, path, pattern, str(date_from))
+        mtime = attrgetter('st_mtime')
+        mtime_aware = lambda timestamp, tzinfo: make_aware(
+            dt.fromtimestamp(timestamp), tzinfo
+        )
         file_list = []
 
         try:
-            for file_ in self._client.listdir_attr(path):
+            dir_content = sorted(
+                self._client.listdir_attr(path), key=mtime, reverse=True
+            )
+            for file_ in dir_content:
                 if stat.S_ISDIR(file_.st_mode):
                     new_path = os.path.join(path, file_.filename)
-                    file_list = file_list + self.get_files_to_download(new_path, pattern, date)
-
+                    file_list = file_list + self.get_files_to_download(
+                        new_path, pattern, date_from, date_to
+                    )
                 try:
-                    match_file = re.match(pattern, file_.filename) and \
-                                 make_aware(dt.fromtimestamp(file_.st_mtime)) >= date
+                    if mtime_aware(file_.st_mtime, date_from.tzinfo) < date_from:
+                        break
+
+                    match_file_conditions = [
+                        re.match(pattern, file_.filename),
+                        mtime_aware(file_.st_mtime, date_from.tzinfo) >= date_from
+                    ]
+                    if date_to:
+                        match_file_conditions.append(
+                            mtime_aware(file_.st_mtime, date_from.tzinfo) < date_to
+                        )
                 except AmbiguousTimeError as e:
                     msg = "An error ocurred in date comparation for file %s, reason: %s"
                     logger.error(msg, file_.filename, str(e))
                 else:
-                    if match_file:
+                    if all(match_file_conditions):
                         file_list.append(
                             (os.path.join(path, file_.filename), file_.filename)
                         )

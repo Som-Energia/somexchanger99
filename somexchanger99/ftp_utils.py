@@ -25,9 +25,9 @@ class FtpUtils(object):
 
         return content
 
-    def get_files_to_download(self, path, pattern, date):
+    def get_files_to_download(self, path, pattern, date_from):
         msg = "Getting files from %s that match pattern %s and are newer than %s"
-        logger.debug(msg, path, pattern, str(date))
+        logger.debug(msg, path, pattern, str(date_from))
         file_list = []
 
         try:
@@ -35,19 +35,19 @@ class FtpUtils(object):
                 if self._client.path.isdir(file_name):
                     new_path = os.path.join(path, file_name)
 
-                    file_list = file_list + self.get_files_to_download(new_path, pattern, date)
+                    file_list = file_list + self.get_files_to_download(new_path, pattern, date_from)
                 try:
                     full_path_file = os.path.join(path, file_name)
                     file_date = make_aware(
                         datetime.fromtimestamp(self._client.path.getmtime(full_path_file)),
-                        date.tzinfo
+                        date_from.tzinfo
                     )
                 except AmbiguousTimeError as e:
                     msg = "An error ocurred in date comparation, reason: %s"
                     logger.error(msg, str(e))
                 else:
                     match_file = re.match(r'{}'.format(pattern), file_name) and \
-                                 file_date >= date
+                                 file_date >= date_from
                     if match_file:
                         file_list.append((full_path_file, file_name))
         except ftputil.error.FTPError as e:
