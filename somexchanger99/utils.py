@@ -120,7 +120,7 @@ def get_curves(curve):
             files_to_download = sftp.get_files_to_download(
                 path=provider['root_dir'],
                 pattern=curve.pattern,
-                date=curve.last_upload or timezone.now() - timedelta(days=1)
+                date_from=curve.last_upload or timezone.now() - timedelta(days=1)
             )
             logger.debug("Files found from %s: %s", provider['host'], str(files_to_download))
             files_to_exchange[provider['name']] = files_to_download
