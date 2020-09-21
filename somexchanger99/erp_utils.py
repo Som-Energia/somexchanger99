@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.timezone import make_aware
 from erppeek import Client
 
-from somexchanger.models import Curve2Exchange
+from somexchanger99.models import Curve2Exchange
 
 logger = get_task_logger(__name__)
 
