@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 
 import ftputil
-from dateutil import parser, tz
+from dateutil import parser
 from django.utils.timezone import make_aware
 from pytz.exceptions import AmbiguousTimeError
 
@@ -23,30 +23,31 @@ class FtpClient(ftputil.FTPHost):
             for entry in self._native_mlsd(path):
                 yield entry
         except ftplib.error_perm:
-            yield self._custom_mlsd(path)
+            for entry in self._custom_mlsd(path):
+                yield entry
 
     def _native_mlsd(self, path):
-        return self._session.mlsd(path, ['type', 'modify'])
+        for entry, properties in self._session.mlsd(path):
+            yield (
+                entry,
+                {'type': properties['type'],
+                 'modify': parser.parse(properties['modify'])}
+            )
 
     def _custom_mlsd(self, path):
         for entry in self.listdir(path):
+            entry_full_path = os.path.join(path, entry)
             yield (
                 entry,
-                {'type': 'dir' if self.path.isdir(entry) else 'file',
-                 'modify': self.path.getmtime(entry)}
+                {'type': 'dir' if self.path.isdir(entry_full_path) else 'file',
+                 'modify': datetime.utcfromtimestamp(self.path.getmtime(entry_full_path))}
             )
-
-    def isdir(self, path):
-        return self.path.isdir(path)
-
-    def getmtime(self, path):
-        return datetime.utcfromtimestamp(self.path.getmtime(path))
 
 
 class FtpUtils(object):
 
-    def __init__(self, host, username, password, base_dir, native=True):
-        self._client = FtpClient(host, username, password, native)
+    def __init__(self, host, username, password, base_dir):
+        self._client = FtpClient(host, username, password)
         self.base_dir = base_dir
 
     def download_file_content(self, path):
@@ -69,7 +70,7 @@ class FtpUtils(object):
                     file_list = file_list + self.get_files_to_download(new_path, pattern, date_from)
                 try:
                     file_date = make_aware(
-                        parser.parse(file_properties['modify']), date_from.tzinfo
+                        file_properties['modify'], date_from.tzinfo
                     )
                 except AmbiguousTimeError as e:
                     msg = "An error ocurred in date comparation, reason: %s"
