@@ -1,17 +1,27 @@
 from unittest.mock import patch
 
+import pytest
 from django.test import TestCase
 from django.utils import timezone
 
-from . import erp_utils, sftp_utils
-from .controllers import exchange_meteologica_predictions
-from .models import Curve2Exchange, File2Exchange
-from .utils import get_curves, push_curves
+from somexchanger99 import erp_utils, sftp_utils
+from somexchanger99.models import Curve2Exchange, File2Exchange
+
+def test_pytest_ok():
+    assert 'foo' != 'bar'
+
+def test_testenviron_ok(settings):
+    # Given a settings object
+    # settings
+
+    # then we are in test environment
+    assert settings.TEST == 'OK'
 
 
+@pytest.mark.skip(reason="To refactor")
 class TestUtils(TestCase):
 
-    erp = erp_utils.ErpUtils()
+    erp = None # erp_utils.ErpUtils()
 
     def setUp(self):
         self.maxDiff = None
