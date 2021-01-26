@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.1.6
+* FtpUtils can list server directories with and without mlsd command
+
 ##### v0.1.5
 * get_files_to_download now stops searching when a file is older than the initial date
 * added `date_to` parameter to get_files_to_download to search between two dates
