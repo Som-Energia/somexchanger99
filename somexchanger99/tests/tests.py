@@ -1,8 +1,10 @@
+import base64
 from unittest.mock import patch
 
 import pytest
 from django.test import TestCase
 from django.utils import timezone
+from datetime import datetime
 
 from somexchanger99 import erp_utils, sftp_utils
 from somexchanger99.models import Curve2Exchange, File2Exchange
@@ -16,6 +18,136 @@ def test_testenviron_ok(settings):
 
     # then we are in test environment
     assert settings.TEST == 'OK'
+
+
+def test__ErpUtils_get_e101_attachments__oneCase():
+
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = '2021-01-28'
+    process = 'E1'
+    step = '01'
+    
+    attachments = erp.get_e101_attachments(model=model, date=date, process=process, step=step)
+
+    e101_xml_content = base64.decodebytes(attachments[0]['file'].encode()).decode()
+
+    assert attachments != []
+    assert 'MensajeSolicitudDesistimiento' in e101_xml_content
+
+
+def _test__ErpUtils_get_e101_attachments__manyCases():
+
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = '2021-01-28'
+    process = 'E1'
+    step = '01'
+
+    attachments = erp.get_e101_attachments(model=model, date=date, process=process, step=step)
+
+    assert attachments != []
+    assert 'process' in attachments
+    assert attachments['process'] == 'E1'
+    assert 'step' in attachments
+    assert attachments['step'] == '01'
+    assert 'attachments' in attachments
+    assert attachments['attachments'] != []
+
+def _test__ErpUtils_get_e101_attachments__oneCase__EmptyStep():
+
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = '2021-01-28'
+    process = 'E1'
+    step = '01'
+
+    attachments = erp.get_e101_attachments(model=model, date=date, process=process, step=step)
+
+    assert attachments != []
+    assert 'process' in attachments
+    assert attachments['process'] == 'E1'
+    assert 'step' in attachments
+    assert attachments['step'] == '01'
+    assert 'attachments' in attachments
+    assert attachments['attachments'] != []
+
+def _test__ErpUtils_get_attachments__E1():
+
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = '2021-01-28'
+    process = 'E1'
+    step = '01'
+
+    attachments = erp.get_attachments(model=model, date=date, process=process, step=step)
+
+    assert attachments != []
+    assert 'process' in attachments
+    assert attachments['process'] == 'E1'
+    assert 'step' in attachments
+    assert attachments['step'] == '01'
+    assert 'attachments' in attachments
+    assert attachments['attachments'] != []
+
+def _test__ErpUtils_get_attachments__oneCase_notE1():
+
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = datetime.strptime('2020-12-01 08:15:27.243860', '%Y-%m-%d %H:%M:%S.%f')
+    process = 'A3'
+    step = '01'
+    date_to = datetime.strptime('2021-02-01 08:15:27.243860', '%Y-%m-%d %H:%M:%S.%f')
+
+    attachments = erp.get_attachments(model=model, date=date, process=process, step=step, date_to=date_to)
+
+    assert attachments != []
+    assert 'process' in attachments
+    assert attachments['process'] == 'E1'
+    assert 'step' in attachments
+    assert attachments['step'] == '01'
+    assert 'attachments' in attachments
+    assert attachments['attachments'] != []
+
+def _test__ErpUtils_action_exportar_xml():
+
+    erp = erp_utils.ErpUtils()
+    sw_obj = erp._client.model('giscedata.switching')
+    e1_ids = sw_obj.search([('proces_id', '=', 11)])
+    step_obj = erp._client.model('giscedata.switching.step')
+
+    e1_id = e1_ids[2]
+    steps = step_obj.search([('proces_id','=', 11)])
+
+    swe101 = erp._client.model('giscedata.switching.e1.01')
+    pas_id = swe101.search([('sw_id', '=', e1_id)])[0]
+
+    
+    e101_step = sorted(steps)[0]
+    switching_wizard = erp._client.model('giscedata.switching.wizard')
+    
+    step_id = str( (e101_step, pas_id) )
+    print(step_id)
+
+
+    id_wiz = switching_wizard.create(
+        {'name': False, 'state': 'init', 'multicas': 0, 'file': False, 'step_id': step_id, 'mark_as_processed': 0, 'send_always': 1},
+        {'lang': 'ca_ES', 'active_ids': [e1_id], 'tz': 'Europe/Madrid', 'active_id': e1_id}
+    )
+
+    switching_wizard.action_exportar_xml([id_wiz.id], {'active_ids': [e1_id], 'active_id': e1_id})
+    e101_xml = switching_wizard.read([id_wiz.id],['file'], {'lang': 'ca_ES', 'bin_size': False, 'tz': 'Europe/Madrid', 'active_ids': [e1_id], 'active_id': e1_id})
+
+    e101_xml_content = base64.decodebytes(e101_xml.encode()).decode()
+
+    assert erp != None
+
+    import pdb; pdb.set_trace()
 
 
 @pytest.mark.skip(reason="To refactor")
