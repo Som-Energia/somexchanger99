@@ -25,13 +25,22 @@ def get_attachments(model, date, process, **kwargs):
     )
     logger.info(msg, process, step or '', str(date))
 
-    attachments = ERP.get_attachments(
-        model=model,
-        date=date,
-        process=process,
-        step=step,
-        date_to=kwargs.get('date_to')
-    )
+    if process == 'E1' and step == '01':
+        attachments = ERP.generate_e101_attachments(
+            model=model,
+            date=date,
+            process=process,
+            step=step,
+            date_to=kwargs.get('date_to')
+        )
+    else:
+        attachments = ERP.get_attachments(
+            model=model,
+            date=date,
+            process=process,
+            step=step,
+            date_to=kwargs.get('date_to')
+        )
     attachments_result = {
         'process': process,
         'attachments': attachments

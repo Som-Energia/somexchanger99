@@ -14,45 +14,57 @@ class ErpUtils(object):
     def __init__(self):
         self._client = Client(**settings.ERP_CONF)
 
-    def get_e101_attachments(self, model, date, process, **kwargs):
+    def generate_e101_attachments(self, model, date, process, step, **kwargs):
 
-        step = kwargs.get('step')
+        date_to = kwargs.get('date_to')
 
+        polissa_obj = self._client.model('giscedata.polissa')
+        partner_obj = self._client.model('res.partner')
         sw_obj = self._client.model('giscedata.switching')
         sw_step_obj = self._client.model('giscedata.switching.step')
         swe101 = self._client.model('giscedata.switching.e1.01')
         switching_wizard = self._client.model('giscedata.switching.wizard')
 
-        e1_ids = sw_obj.search([('proces_id', '=', 11)])
-
-        e1_id = e1_ids[2]
-
-        steps = sw_step_obj.search([('proces_id','=', 11)])
-
-        pas_id = swe101.search([('sw_id', '=', e1_id)])[0]
-
-        e101_step = sorted(steps)[0]
-        
-        step_id = str( (e101_step, pas_id) )
-
-        id_wiz = switching_wizard.create(
-            {'name': False, 'state': 'init', 'multicas': 0, 'file': False, 'step_id': step_id, 'mark_as_processed': 0, 'send_always': 1},
-            {'lang': 'ca_ES', 'active_ids': [e1_id], 'tz': 'Europe/Madrid', 'active_id': e1_id}
+        e1s_objects = self._get_objects_with_attachment(
+            model, date, process=process, step=step, date_to=date_to
         )
+        e101_attachments = []
 
-        switching_wizard.action_exportar_xml([id_wiz.id], {'active_ids': [e1_id], 'active_id': e1_id})
-        e101_xml = switching_wizard.read([id_wiz.id],['file'], {'lang': 'ca_ES', 'bin_size': False, 'tz': 'Europe/Madrid', 'active_ids': [e1_id], 'active_id': e1_id})
+        for e1 in e1s_objects:
+            if not e1.polissa_ref_id:
+                continue
 
-        #e101_xml_content = base64.decodebytes(e101_xml.encode()).decode()
+            steps = sw_step_obj.search([('proces_id','=', 11)])
+            pas_ids = swe101.search([('sw_id', '=', e1.id)])
+            if not pas_ids:
+                continue
 
-        # attachments_result = {
-        #     'process': process,
-        #     'attachments': attachments
-        # }
-        # if step:
-        #     attachments_result['step'] = step
+            pas_id = pas_ids[0]
+            e101_step = sorted(steps)[0]
+            step_id = str( (e101_step, pas_id) )
 
-        return e101_xml
+            polissa_id = e1.polissa_ref_id.id
+            titular_id = polissa_obj.read(polissa_id, ['titular'])
+            lang = partner_obj.read(titular_id['titular'][0], ['lang'])['lang']
+
+            id_wiz = switching_wizard.create(
+                {'step_id': step_id, 'mark_as_processed': 0},
+                {'lang': lang, 'active_ids': [ e1.id], 'active_id':  e1.id}
+            )
+
+            name = 'e101.xml'
+
+            switching_wizard.action_exportar_xml([id_wiz.id], {'active_ids': [ e1.id], 'active_id':  e1.id})
+
+            attachments = switching_wizard.read(
+                [id_wiz.id],
+                ['file'],
+                {'lang': lang, 'bin_size': False, 'tz': 'Europe/Madrid', 'active_ids': [e1.id], 'active_id': e1.id}
+            )
+        
+            e101_attachments.extend([{'name': name, 'datas': attachment['file']} for attachment in attachments])
+
+        return e101_attachments
 
     def get_attachments(self, model, date, process, **kwargs):
         '''

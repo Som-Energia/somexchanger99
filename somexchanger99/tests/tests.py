@@ -5,8 +5,10 @@ import pytest
 from django.test import TestCase
 from django.utils import timezone
 from datetime import datetime
+from pytz import timezone
 
 from somexchanger99 import erp_utils, sftp_utils
+from somexchanger99.utils import get_attachments
 from somexchanger99.models import Curve2Exchange, File2Exchange
 
 def test_pytest_ok():
@@ -19,100 +21,140 @@ def test_testenviron_ok(settings):
     # then we are in test environment
     assert settings.TEST == 'OK'
 
+# TODO defragilize the tests with a mock or a fake
+# TODO mock or fake so that we're certain only one attachment is there
+
+def test__ErpUtils_get_objects_with_attachment():
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    process = 'E1'
+    step = '01'
+
+    e1s_objects = erp._get_objects_with_attachment(
+        model, date, process=process, step=step, date_to=None
+    )
+
+    assert e1s_objects.id != []
+
 
 def test__ErpUtils_get_e101_attachments__oneCase():
 
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = '2021-01-28'
+    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
-    
-    attachments = erp.get_e101_attachments(model=model, date=date, process=process, step=step)
 
-    e101_xml_content = base64.decodebytes(attachments[0]['file'].encode()).decode()
+    attachments = erp.generate_e101_attachments(model=model, date=date, process=process, step=step)
 
+    # TODO defragilize
+    # assert len(attachments) == 1
     assert attachments != []
+
+    e101_xml_content = base64.decodebytes(attachments[0]['datas'].encode()).decode()
+
     assert 'MensajeSolicitudDesistimiento' in e101_xml_content
 
 
-def _test__ErpUtils_get_e101_attachments__manyCases():
+def test__ErpUtils_get_e101_attachments__manyCases():
 
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = '2021-01-28'
+    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
-    attachments = erp.get_e101_attachments(model=model, date=date, process=process, step=step)
+    attachments = erp.generate_e101_attachments(model=model, date=date, process=process, step=step)
 
     assert attachments != []
-    assert 'process' in attachments
-    assert attachments['process'] == 'E1'
-    assert 'step' in attachments
-    assert attachments['step'] == '01'
-    assert 'attachments' in attachments
-    assert attachments['attachments'] != []
+    assert len(attachments) > 1
 
+    for attachment in attachments:
+        e101_xml_content = base64.decodebytes(attachment['datas'].encode()).decode()
+
+        assert 'MensajeSolicitudDesistimiento' in e101_xml_content
+
+# TODO erppeek seems to not filter correctly the dates, we tested calling browse directly filtering by date
+def _test__ErpUtils_get_e101_attachments__manyCases_filterByDateRange():
+
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = datetime(2020, 10, 1, 1, 46, 22, tzinfo=timezone('CET'))
+    process = 'E1'
+    step = '01'
+    date_to = datetime(2020, 10, 2, 12, 00, 22, tzinfo=timezone('CET'))
+
+    attachments = erp.generate_e101_attachments(model=model, date=date, process=process, step=step)
+
+    assert attachments != []
+    assert len(attachments) == 1
+
+    for attachment in attachments:
+        e101_xml_content = base64.decodebytes(attachment['datas'].encode()).decode()
+
+        assert 'MensajeSolicitudDesistimiento' in e101_xml_content
+
+# TODO data has already an empty step example, keep it when mocking/faking
 def _test__ErpUtils_get_e101_attachments__oneCase__EmptyStep():
 
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = '2021-01-28'
+    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
-    attachments = erp.get_e101_attachments(model=model, date=date, process=process, step=step)
+    attachments = erp.generate_e101_attachments(model=model, date=date, process=process, step=step)
 
     assert attachments != []
-    assert 'process' in attachments
-    assert attachments['process'] == 'E1'
-    assert 'step' in attachments
-    assert attachments['step'] == '01'
-    assert 'attachments' in attachments
-    assert attachments['attachments'] != []
 
-def _test__ErpUtils_get_attachments__E1():
-
-    erp = erp_utils.ErpUtils()
+def test__ErpUtils_get_attachments__E101():
 
     model = 'giscedata.switching'
-    date = '2021-01-28'
+    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
-    attachments = erp.get_attachments(model=model, date=date, process=process, step=step)
+    attachment_result = get_attachments(model=model, date=date, process=process, step=step)
+ 
+    assert 'attachments' in attachment_result
+
+    attachments = attachment_result['attachments']
 
     assert attachments != []
-    assert 'process' in attachments
-    assert attachments['process'] == 'E1'
-    assert 'step' in attachments
-    assert attachments['step'] == '01'
-    assert 'attachments' in attachments
-    assert attachments['attachments'] != []
 
-def _test__ErpUtils_get_attachments__oneCase_notE1():
+    for attachment in attachments:
+        # TODO how do we distinguish e1 from others?
+        e101_xml_content = base64.decodebytes(attachment['datas'].encode()).decode()
 
-    erp = erp_utils.ErpUtils()
+        assert 'MensajeSolicitudDesistimiento' in e101_xml_content
+
+def _test__ErpUtils_get_attachments__notE1():
 
     model = 'giscedata.switching'
-    date = datetime.strptime('2020-12-01 08:15:27.243860', '%Y-%m-%d %H:%M:%S.%f')
-    process = 'A3'
-    step = '01'
-    date_to = datetime.strptime('2021-02-01 08:15:27.243860', '%Y-%m-%d %H:%M:%S.%f')
+    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    process = 'E1'
+    step = '02'
+    date_to = datetime(2020, 10, 4, 7, 46, 22, tzinfo=timezone('CET'))
 
-    attachments = erp.get_attachments(model=model, date=date, process=process, step=step, date_to=date_to)
+    attachment_result = get_attachments(model=model, date=date, process=process, step=step, date_to=date_to)
+
+    assert 'attachments' in attachment_result
+
+    attachments = attachment_result['attachments']
 
     assert attachments != []
-    assert 'process' in attachments
-    assert attachments['process'] == 'E1'
-    assert 'step' in attachments
-    assert attachments['step'] == '01'
-    assert 'attachments' in attachments
-    assert attachments['attachments'] != []
+    for attachment in attachments:
+        # TODO how do we distinguish e1 from others?
+        print(attachment)
+        xml_content = base64.decodebytes(attachment['datas'].encode()).decode()
+
+        assert 'MensajeSolicitudDesistimiento' not in xml_content
 
 def _test__ErpUtils_action_exportar_xml():
 
@@ -146,8 +188,6 @@ def _test__ErpUtils_action_exportar_xml():
     e101_xml_content = base64.decodebytes(e101_xml.encode()).decode()
 
     assert erp != None
-
-    import pdb; pdb.set_trace()
 
 
 @pytest.mark.skip(reason="To refactor")
