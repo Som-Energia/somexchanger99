@@ -134,7 +134,7 @@ def test__ErpUtils_get_attachments__E101():
 
         assert 'MensajeSolicitudDesistimiento' in e101_xml_content
 
-def _test__ErpUtils_get_attachments__notE1():
+def test__ErpUtils_get_attachments__notE101():
 
     model = 'giscedata.switching'
     date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
@@ -143,17 +143,14 @@ def _test__ErpUtils_get_attachments__notE1():
     date_to = datetime(2020, 10, 4, 7, 46, 22, tzinfo=timezone('CET'))
 
     attachment_result = get_attachments(model=model, date=date, process=process, step=step, date_to=date_to)
-
     assert 'attachments' in attachment_result
 
     attachments = attachment_result['attachments']
 
     assert attachments != []
     for attachment in attachments:
-        # TODO how do we distinguish e1 from others?
-        print(attachment)
         xml_content = base64.decodebytes(attachment['datas'].encode()).decode()
-
+        
         assert 'MensajeSolicitudDesistimiento' not in xml_content
 
 def _test__ErpUtils_action_exportar_xml():

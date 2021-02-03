@@ -1,3 +1,4 @@
+from datetime import datetime
 from operator import itemgetter
 
 from celery.utils.log import get_task_logger
@@ -18,51 +19,53 @@ class ErpUtils(object):
 
         date_to = kwargs.get('date_to')
 
-        polissa_obj = self._client.model('giscedata.polissa')
-        partner_obj = self._client.model('res.partner')
-        sw_obj = self._client.model('giscedata.switching')
-        sw_step_obj = self._client.model('giscedata.switching.step')
-        swe101 = self._client.model('giscedata.switching.e1.01')
-        switching_wizard = self._client.model('giscedata.switching.wizard')
+        Polissa = self._client.model('giscedata.polissa')
+        Partner = self._client.model('res.partner')
+        ProcesSwitching = self._client.model('giscedata.switching.proces')
+        StepSwitching = self._client.model('giscedata.switching.step')
+        E101 = self._client.model('giscedata.switching.e1.01')
+        SwitchingWizard = self._client.model('giscedata.switching.wizard')
 
         e1s_objects = self._get_objects_with_attachment(
             model, date, process=process, step=step, date_to=date_to
         )
         e101_attachments = []
 
+        e1_process_id = ProcesSwitching.search([('name','=','E1')])[0]
+
         for e1 in e1s_objects:
-            if not e1.polissa_ref_id:
-                continue
+            pas_ids = E101.search([('sw_id', '=', e1.id)])
+            if e1.polissa_ref_id and pas_ids:
+                steps = StepSwitching.search([('proces_id','=', e1_process_id)])
 
-            steps = sw_step_obj.search([('proces_id','=', 11)])
-            pas_ids = swe101.search([('sw_id', '=', e1.id)])
-            if not pas_ids:
-                continue
+                pas_id = pas_ids[0]
+                e101_step = sorted(steps)[0]
+                step_id = str( (e101_step, pas_id) )
 
-            pas_id = pas_ids[0]
-            e101_step = sorted(steps)[0]
-            step_id = str( (e101_step, pas_id) )
+                titular_id = Polissa.read(e1.polissa_ref_id.id, ['titular'])['titular'][0]
+                lang = Partner.read(titular_id, ['lang'])['lang']
 
-            polissa_id = e1.polissa_ref_id.id
-            titular_id = polissa_obj.read(polissa_id, ['titular'])
-            lang = partner_obj.read(titular_id['titular'][0], ['lang'])['lang']
+                id_wiz = SwitchingWizard.create(
+                    {'step_id': step_id, 'mark_as_processed': 0},
+                    {'lang': lang, 'active_ids': [ e1.id], 'active_id':  e1.id}
+                )
+                name = "{}_{}_{}_{}_{}.xml".format(
+                    e1.company_id.ref,
+                    e1_process_id,
+                    pas_id,
+                    e1.cups_input,
+                    datetime.now().isoformat()
+                )
 
-            id_wiz = switching_wizard.create(
-                {'step_id': step_id, 'mark_as_processed': 0},
-                {'lang': lang, 'active_ids': [ e1.id], 'active_id':  e1.id}
-            )
+                SwitchingWizard.action_exportar_xml([id_wiz.id], {'active_ids': [ e1.id], 'active_id':  e1.id})
 
-            name = 'e101.xml'
-
-            switching_wizard.action_exportar_xml([id_wiz.id], {'active_ids': [ e1.id], 'active_id':  e1.id})
-
-            attachments = switching_wizard.read(
-                [id_wiz.id],
-                ['file'],
-                {'lang': lang, 'bin_size': False, 'tz': 'Europe/Madrid', 'active_ids': [e1.id], 'active_id': e1.id}
-            )
-        
-            e101_attachments.extend([{'name': name, 'datas': attachment['file']} for attachment in attachments])
+                attachments = SwitchingWizard.read(
+                    [id_wiz.id],
+                    ['file'],
+                    {'lang': lang, 'bin_size': False, 'tz': 'Europe/Madrid', 'active_ids': [e1.id], 'active_id': e1.id}
+                )
+            
+                e101_attachments.extend([{'name': name, 'datas': attachment['file']} for attachment in attachments])
 
         return e101_attachments
 
