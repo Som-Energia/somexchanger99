@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/2.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
-
+import os
 import environ
 
 from psutil import Process
@@ -18,7 +18,7 @@ BASE_DIR = environ.Path(__file__) - 3
 
 env = environ.Env()
 
-env.read_env()
+env.read_env(os.path.join(str(BASE_DIR), '.env'))
 
 cpus = len(Process().cpu_affinity())
 

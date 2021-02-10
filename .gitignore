@@ -111,6 +111,9 @@ coverage
 # SFTP configuration file
 sftp-config.json
 
+### VStudio
+.vscode 
+
 ### Vim template
 # Swap
 [._]*.s[a-v][a-z]
