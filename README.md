@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.2.0
+* Generate and download E101 files 
+
 ##### v0.1.6
 * FtpUtils can list server directories with and without mlsd command
 
