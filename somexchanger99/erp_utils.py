@@ -7,7 +7,11 @@ from django.conf import settings
 from django.utils.timezone import make_aware
 from erppeek import Client
 
+from somexchanger99.models import Curve2Exchange
+
 logger = get_task_logger(__name__)
+
+client = Client(**settings.ERP_CONF)
 
 
 class ErpUtils(object):
@@ -147,3 +151,45 @@ class ErpUtils(object):
             attach for attach in attachements
             if step_info in description(attach) and is_created_from_date(attach, date)
         ]
+
+
+class ERPCurveProvider(object):
+
+    FIELDS = [
+        'name',
+        'host',
+        'port'
+        'user',
+        'password',
+        'private_key_binary',
+        'private_key',
+        'private_key_pass',
+        'root_dir'
+    ]
+
+    def __init__(self, provider_id):
+        self._erp_conn = client
+
+        for name, value in self._erp_conn.TgSFTP.read(provider_id, self.FIELDS).items():
+            setattr(self, name, value)
+
+        self._source = Sftp(
+            host=self.host,
+            port=self.port,
+            username=self.user,
+            password=self.password,
+            base_dir=self.root_dir
+        )
+
+    def get_curves(self, *curve_name, date=None):
+        curves = Curve2Exchange.objects.filter(name__in=curve_name)
+        result = {}
+
+        with self._source:
+            for curve in curves:
+                result[curve.name] = self._source.get_files_to_download(
+                    path=self.root_dir,
+                    pattern=curve.pattern,
+                    date=curve.last_upload or date
+                )
+        return result
