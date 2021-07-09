@@ -128,6 +128,7 @@ class ErpUtils(object):
             ] + ([('write_date', '<', str(date_to.date()))] if date_to else []),
             'giscedata.switching': [
                 ('proces_id.name', '=', kwargs.get('process')),
+                ('state', '!=', 'cancel'),
                 ('date', '>=', str(date_from.date())),
             ] + ([('date', '<', str(date_to.date()))] if date_to else [])
         }
