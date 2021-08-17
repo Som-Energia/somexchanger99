@@ -80,6 +80,9 @@ def exchange_meteologica_predictions():
     upload_res = push_meteologica_files(files)
     for file_type, uploaded_files in upload_res.items():
         exchange_result[file_type]['uploaded'] = uploaded_files
+        if uploaded_files > 0:
+            files2exchange.filter(
+                name=file_type
+            ).update(last_upload=now() - timedelta(hours=1))
 
-    files2exchange.update(last_upload=now() - timedelta(hours=1))
     return exchange_result

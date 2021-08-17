@@ -137,7 +137,7 @@ class ErpUtils(object):
         logger.info(query)
         return query
 
-    def __filter_attachment(self, attachements, step, date):
+    def __filter_attachment(self, attachments, step, date):
         result = []
         description = lambda attach: attach.get('description', '') or ''
         create_date = itemgetter('create_date')
