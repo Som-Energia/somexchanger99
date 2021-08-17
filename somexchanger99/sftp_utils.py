@@ -97,7 +97,7 @@ class SftpUtils(object):
                     )
                 try:
                     if mtime_aware(file_.st_mtime, date_from.tzinfo) < date_from:
-                        break
+                        continue
 
                     match_file_conditions = [
                         re.match(pattern, file_.filename),
