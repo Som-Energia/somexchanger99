@@ -14,6 +14,7 @@ class ErpUtils(object):
 
     def __init__(self):
         self._client = Client(**settings.ERP_CONF)
+        self.Switching = self._client.model('giscedata.switching')
 
     def generate_e101_attachments(self, model, date, process, step, **kwargs):
 
@@ -64,7 +65,7 @@ class ErpUtils(object):
                     ['file'],
                     {'lang': lang, 'bin_size': False, 'tz': 'Europe/Madrid', 'active_ids': [e1.id], 'active_id': e1.id}
                 )
-            
+
                 e101_attachments.extend([{'name': name, 'datas': attachment['file']} for attachment in attachments])
 
         return e101_attachments
@@ -137,14 +138,21 @@ class ErpUtils(object):
         return query
 
     def __filter_attachment(self, attachements, step, date):
+        result = []
         description = lambda attach: attach.get('description', '') or ''
         create_date = itemgetter('create_date')
+        switching_id = lambda object_reference: int(object_reference.split(',')[1])
 
         step_info = 'Pas: {}'.format(step)
         is_created_from_date = lambda attach, from_date: \
             make_aware(parser.parse(create_date(attach)), from_date.tzinfo) >= from_date
 
-        return [
-            attach for attach in attachements
-            if step_info in description(attach) and is_created_from_date(attach, date)
-        ]
+        for attach in attachments:
+            if step_info in description(attach) and is_created_from_date(attach, date):
+                cups = self.Switching.read(
+                    switching_id(attach['selection_associated_object']), ['cups_id']
+                )['cups_id'][1]
+                attach['name_with_cups'] = '{}_{}'.format(cups, attach['name'])
+                result.append(attach)
+
+        return result
