@@ -55,16 +55,18 @@ def get_attachments(model, date, process, **kwargs):
 
 def upload_attach_to_sftp(sftp, attachment, path):
 
-    logger.info("Uploading %s to %s", attachment['name'], path)
+    logger.info("Uploading %s to %s", attachment['name_with_cups'], path)
     try:
-        attach_conent = base64.decodebytes(
+        attach_content = base64.decodebytes(
             attachment['datas'].encode()
         ).decode('iso-8859-1')
-        file_uploaded = sftp.upload_file(attach_conent, attachment['name'], path)
+        file_uploaded = sftp.upload_file(
+            attach_content, attachment['name_with_cups'], path
+        )
     except SftpUploadException as e:
         logger.error(e.message)
     else:
-        logger.info("%s succesfully uploaded to %s", attachment['name'], path)
+        logger.info("%s succesfully uploaded to %s", attachment['name_with_cups'], path)
         return file_uploaded
 
 

@@ -4,6 +4,10 @@ from django.utils.translation import ugettext as _
 
 class Atr2Exchange(models.Model):
 
+    class Meta:
+        verbose_name = 'atr to exchange'
+        verbose_name_plural = 'atrs to exchange'
+
     process = models.CharField(
         max_length=128,
         verbose_name=_('Process'),
@@ -49,6 +53,10 @@ class Atr2Exchange(models.Model):
 
 
 class Curve2Exchange(models.Model):
+
+    class Meta:
+        verbose_name = 'curve to exchange'
+        verbose_name_plural = 'curves to exchange'
 
     name = models.CharField(
         max_length=20,
@@ -116,6 +124,10 @@ class OriginFile(models.Model):
 
 
 class File2Exchange(models.Model):
+
+    class Meta:
+        verbose_name = 'file to exchange'
+        verbose_name_plural = 'files to exchange'
 
     name = models.CharField(
         max_length=150,
