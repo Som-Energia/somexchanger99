@@ -52,6 +52,11 @@ WIP
 
 #### Changes
 
+##### v0.2.1
+* Fixed minor bugs when walking throughout [s]ftp directories
+* Fixed minor bugs searching erp cases
+* Added better admin support
+
 ##### v0.2.0
 * Generate and download E101 files 
 
