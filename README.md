@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.2.2
+* Added som sftp and metolofica ftp to check_connections command 
+
 ##### v0.2.1
 * Fixed minor bugs when walking throughout [s]ftp directories
 * Fixed minor bugs searching erp cases
