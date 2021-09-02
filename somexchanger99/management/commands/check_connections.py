@@ -1,12 +1,14 @@
+from config.settings.local import METEO_CONF, SFTP_CONF
 import logging
 
-from tqdm import tqdm
-from django.core.management.base import BaseCommand
 import paramiko
+from django.conf import settings
+from django.core.management.base import BaseCommand
+from tqdm import tqdm
 
 from somexchanger99.erp_utils import ErpUtils
-from somexchanger99.sftp_utils import SftpUtils
 from somexchanger99.ftp_utils import FtpUtils
+from somexchanger99.sftp_utils import SftpUtils
 
 paramiko_logger = logging.getLogger('paramiko.transport')
 paramiko_logger.addHandler(logging.NullHandler())
@@ -53,6 +55,24 @@ class Command(BaseCommand):
         erp = ErpUtils()
         sftp_providers = erp.get_sftp_providers()
 
+        sftp_providers.extend([
+            {
+                'name': 'SomSftp',
+                'host': settings.SFTP_CONF['host'],
+                'port': settings.SFTP_CONF['port'],
+                'user': settings.SFTP_CONF['username'],
+                'password':settings.SFTP_CONF['password'],
+                'root_dir': settings.SFTP_CONF['base_dir']
+            },
+            {
+                'name': 'MeteoFTP',
+                'host': settings.METEO_CONF['host'],
+                'port': settings.METEO_CONF.get('port', 21),
+                'user': settings.METEO_CONF['username'],
+                'password':settings.METEO_CONF['password'],
+                'root_dir': settings.METEO_CONF['base_dir']
+            }
+        ])
         self.stdout.write(self.style.NOTICE('Checking connections...'))
         provider_tqdm = tqdm(sftp_providers, unit='', ncols=0)
         for provider in provider_tqdm:
