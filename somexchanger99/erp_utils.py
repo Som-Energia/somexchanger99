@@ -50,12 +50,11 @@ class ErpUtils(object):
                     {'step_id': step_id, 'mark_as_processed': 0},
                     {'lang': lang, 'active_ids': [ e1.id], 'active_id':  e1.id}
                 )
-                name = "{}_{}_{}_{}_{}.xml".format(
+                name = "{}_{}_{}_{}.xml".format(
                     e1.company_id.ref,
                     e1_process_id,
                     pas_id,
-                    e1.cups_input,
-                    datetime.now().isoformat()
+                    e1.cups_input
                 )
 
                 SwitchingWizard.action_exportar_xml([id_wiz.id], {'active_ids': [ e1.id], 'active_id':  e1.id})
@@ -66,7 +65,11 @@ class ErpUtils(object):
                     {'lang': lang, 'bin_size': False, 'tz': 'Europe/Madrid', 'active_ids': [e1.id], 'active_id': e1.id}
                 )
 
-                e101_attachments.extend([{'name': name, 'datas': attachment['file']} for attachment in attachments])
+                e101_attachments.extend([{
+                    'name': name,
+                    'name_with_cups': name,
+                    'datas': attachment['file']
+                } for attachment in attachments])
 
         return e101_attachments
 
