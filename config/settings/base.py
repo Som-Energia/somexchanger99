@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import environ
 
-from psutil import Process
+import sentry_sdk
+from psutil import Process, version_info
+from sentry_sdk.integrations.django import DjangoIntegration
+
+from somexchanger99 import VERSION
 
 BASE_DIR = environ.Path(__file__) - 3
 
@@ -22,12 +26,9 @@ env.read_env(os.path.join(str(BASE_DIR), '.env'))
 
 cpus = len(Process().cpu_affinity())
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = env('DEBUG', default=False)
-
 
 # Application definition
 DJANGO_APPS = [
@@ -117,3 +118,15 @@ CELERY_TASK_SERIALIZER = 'pickle'
 
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_CACHE = 'django-cache'
+
+
+# Sentry
+SENTRY_DSN = env('SENTRY_DSN')
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    environment=os.environ['DJANGO_SETTINGS_MODULE'].split('.')[-1],
+    release=VERSION,
+)
