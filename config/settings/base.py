@@ -13,8 +13,9 @@ import os
 import environ
 
 import sentry_sdk
-from psutil import Process, version_info
+from psutil import Process
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
 
 from somexchanger99 import VERSION
 
@@ -124,7 +125,7 @@ CELERY_RESULT_CACHE = 'django-cache'
 SENTRY_DSN = env('SENTRY_DSN')
 sentry_sdk.init(
     dsn=SENTRY_DSN,
-    integrations=[DjangoIntegration()],
+    integrations=[DjangoIntegration(), RedisIntegration()],
     traces_sample_rate=1.0,
     send_default_pii=True,
     environment=os.environ['DJANGO_SETTINGS_MODULE'].split('.')[-1],
