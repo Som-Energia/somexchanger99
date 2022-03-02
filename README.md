@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.2.3
+* Added sentry integration
+
 ##### v0.2.2
 * Added som sftp and metolofica ftp to check_connections command 
 
