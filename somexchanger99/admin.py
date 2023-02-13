@@ -38,24 +38,25 @@ make_inactive.short_description = _('Mark selected objects as inactive')
 @admin.register(Atr2Exchange)
 class Atr2ExchangeAdmin(admin.ModelAdmin):
     actions = [make_active, make_inactive,]
-
     list_display = ('__str__', 'process', 'step', 'model', 'active')
+    search_fields = ['process', 'step', 'model',]
 
 
 @admin.register(Curve2Exchange)
 class Curve2ExchangeAdmin(admin.ModelAdmin):
     actions = [make_active, make_inactive,]
-
     list_display = ('__str__', 'name', 'last_upload', 'active')
+    search_fields = ['name',]
 
 
 @admin.register(File2Exchange)
 class File2ExchangeAdmin(admin.ModelAdmin):
     actions = [make_active, make_inactive,]
-
     list_display = ('__str__', 'name', 'origin', 'pattern', 'active')
+    search_fields = ['name', 'origin__name', 'origin__code_name', 'pattern',]
 
 
 @admin.register(OriginFile)
 class OriginAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('__str__', 'name', 'code_name',)
+    search_fields = ['name', 'code_name',]
