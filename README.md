@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.2.4
+* Updated dependencies
+
 ##### v0.2.3
 * Added sentry integration
 
