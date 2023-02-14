@@ -12,6 +12,7 @@ autoflake = "*"
 pyflakes = "*"
 pylint = "*"
 pytest = "*"
+ipdb = "*"
 
 [packages]
 Django = ">=2.2,<3.0"
@@ -32,3 +33,4 @@ ftputil = "*"
 psycopg2 = "==2.8.6"
 pytest-django = "*"
 sentry-sdk = "*"
+django-import-export = "*"

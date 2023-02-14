@@ -44,6 +44,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     'django_celery_results',
     'django_celery_beat',
+    'import_export',
 ]
 
 LOCAL_APPS = [
