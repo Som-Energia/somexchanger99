@@ -12,6 +12,7 @@ autoflake = "*"
 pyflakes = "*"
 pylint = "*"
 pytest = "*"
+ipdb = "*"
 
 [packages]
 Django = ">=2.2,<3.0"
