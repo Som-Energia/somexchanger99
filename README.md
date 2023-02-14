@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.3.0
+* Added support for import photovoltaic installations
+
 ##### v0.2.4
 * Updated dependencies
 
