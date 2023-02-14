@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 import paramiko
+import sentry_sdk
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.utils import timezone
@@ -18,6 +19,11 @@ logger = get_task_logger(__name__)
 
 def get_attachments(model, date, process, **kwargs):
     step = kwargs.get('step')
+    attachments_result = {
+        **{'process': process},
+        **({'step': step} if step else {})
+    }
+
     msg = "{process}{step}{date}".format(
         process="Getting attachments of proces %s ",
         step="step %s " if step else "%s",
@@ -25,32 +31,36 @@ def get_attachments(model, date, process, **kwargs):
     )
     logger.info(msg, process, step or '', str(date))
 
-    if process == 'E1' and step == '01':
-        attachments = ERP.generate_e101_attachments(
-            model=model,
-            date=date,
-            process=process,
-            step=step,
-            date_to=kwargs.get('date_to')
-        )
+    try:
+        if process == 'E1' and step == '01':
+            attachments = ERP.generate_e101_attachments(
+                model=model,
+                date=date,
+                process=process,
+                step=step,
+                date_to=kwargs.get('date_to')
+            )
+        else:
+            attachments = ERP.get_attachments(
+                model=model,
+                date=date,
+                process=process,
+                step=step,
+                date_to=kwargs.get('date_to')
+            )
+    except Exception as e:
+        msg = "Ieeep! an error happend getting attachments from %s, reason: %s"
+        logger.exception(msg, model, str(e))
+        sentry_sdk.capture_exception(e)
+        attachments_result["attachments"] = []
     else:
-        attachments = ERP.get_attachments(
-            model=model,
-            date=date,
-            process=process,
-            step=step,
-            date_to=kwargs.get('date_to')
-        )
-    attachments_result = {
-        'process': process,
-        'attachments': attachments
-    }
-    if step:
-        attachments_result['step'] = step
+        attachments_result['attachments'] = attachments
 
     msg = "Founded %s attachments of process %s at date %s"
     logger.info(msg, len(attachments_result['attachments']), process, str(date))
+
     return attachments_result
+
 
 
 def upload_attach_to_sftp(sftp, attachment, path):

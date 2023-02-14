@@ -12,7 +12,6 @@ from .utils import (get_attachments, get_curves, get_meteologica_files,
 def exchange_xmls():
     sftp = SftpUtils(**settings.SFTP_CONF)
     atrs_to_exchange = Atr2Exchange.objects.filter(active=True)
-
     timestamp = datetime.now()
 
     attachments_result = [
