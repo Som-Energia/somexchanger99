@@ -52,6 +52,9 @@ WIP
 
 #### Changes
 
+##### v0.3.1
+* Managed erp exceptions in get_attachments
+
 ##### v0.3.0
 * Added support for import photovoltaic installations
 
