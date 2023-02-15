@@ -49,18 +49,21 @@ def get_attachments(model, date, process, **kwargs):
                 date_to=kwargs.get('date_to')
             )
     except Exception as e:
-        msg = "Ieeep! an error happend getting attachments from %s, reason: %s"
-        logger.exception(msg, model, str(e))
+        msg = "{msg}{process}{step}{reason}".format(
+            msg="Ieeep! an error happened getting attachments from ",
+            proces="%s ",
+            step="step %s " if step else "%s",
+            resoon="reason: %s"
+        )
+        logger.exception(msg, model, step, str(e))
         sentry_sdk.capture_exception(e)
         attachments_result["attachments"] = []
     else:
         attachments_result['attachments'] = attachments
-
-    msg = "Founded %s attachments of process %s at date %s"
-    logger.info(msg, len(attachments_result['attachments']), process, str(date))
-
-    return attachments_result
-
+    finally:
+        msg = "Founded %s attachments of process %s at date %s"
+        logger.info(msg, len(attachments_result['attachments']), process, str(date))
+        return attachments_result
 
 
 def upload_attach_to_sftp(sftp, attachment, path):
@@ -74,6 +77,7 @@ def upload_attach_to_sftp(sftp, attachment, path):
             attach_content, attachment['name_with_cups'], path
         )
     except SftpUploadException as e:
+        sentry_sdk.capture_exception(e)
         logger.error(e.message)
     else:
         logger.info("%s succesfully uploaded to %s", attachment['name_with_cups'], path)
@@ -119,6 +123,7 @@ def get_conn(provider):
         )
         return conn
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         raise e
     else:
         return conn
@@ -149,6 +154,7 @@ def get_curves(curve):
             msg = "An uncontroled error happened getting curves from: "\
                   "%s, reason: %s"
             logger.exception(msg, provider['id'], str(e))
+            sentry_sdk.capture_exception(e)
         finally:
             if sftp:
                 sftp.close_connection()
@@ -192,6 +198,7 @@ def push_curves(curve2exchange, curves_files):
                 msg = "An uncontroled error happened during uploading "\
                       "process, reason: %s"
                 logger.exception(msg, str(e))
+                sentry_sdk.capture_exception(e)
             finally:
                 upload_result[provider['name']] = num_exchange_files
                 if sftp:
@@ -199,6 +206,7 @@ def push_curves(curve2exchange, curves_files):
                     sftp = None
     except Exception as e:
         logger.exception("An uncontroled error happened, reason: %s", str(e))
+        sentry_sdk.capture_exception(e)
     finally:
         neuro_sftp.close_connection()
         return upload_result
