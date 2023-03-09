@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.utils.translation import ngettext, ugettext_lazy as _
+from django.utils.translation import ngettext, gettext_lazy as _
 from import_export import fields, resources, widgets
 from import_export.admin import ImportExportModelAdmin
 
