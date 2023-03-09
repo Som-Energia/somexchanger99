@@ -51,61 +51,7 @@ user@host:somexchanger> pipenv run celery -A config.celery_app worker --pool gev
 WIP
 
 #### Changes
-
-##### v0.3.1
-* Managed erp exceptions in get_attachments
-
-##### v0.3.0
-* Added support for import photovoltaic installations
-
-##### v0.2.4
-* Updated dependencies
-
-##### v0.2.3
-* Added sentry integration
-
-##### v0.2.2
-* Added som sftp and metolofica ftp to check_connections command 
-
-##### v0.2.1
-* Fixed minor bugs when walking throughout [s]ftp directories
-* Fixed minor bugs searching erp cases
-* Added better admin support
-
-##### v0.2.0
-* Generate and download E101 files 
-
-##### v0.1.6
-* FtpUtils can list server directories with and without mlsd command
-
-##### v0.1.5
-* get_files_to_download now stops searching when a file is older than the initial date
-* added `date_to` parameter to get_files_to_download to search between two dates
-* fixed makeaware timestamps
-
-##### v0.1.4
-* Added check_connection command
-* Fix transport key exchange algorithms
-* Unify API between SFTP and FTP classes
-* Typos
-
-##### v0.1.3
-* Fix save date in curve exchange proces.
-* Added more logs to better tracking
-* minor changes
-
-##### v0.1.2
-* Fix date meaning when saving files in sftps. Now is the day that de process was launched
-
-##### v0.1.1
-* Fix search query and filters in erp utils
-* Add pattern in curve2exchange model
-* minor fixes
-
-##### v0.1.0
-* Exchange files between ftps
-* Exchange files between sftps
-* Exchange files between sftps and [powerERP](https://github.com/gisce/erp)
+See [CHANGELOG](CHANGELOG) for more details
 
 
 #### Contact
