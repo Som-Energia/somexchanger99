@@ -79,8 +79,9 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages'
+                'django.contrib.messages.context_processors.messages',
             ],
         }
     },
@@ -112,12 +113,9 @@ STATIC_URL = '/static/'
 TMP_ROOT = str(BASE_DIR('tmp'))
 
 # Celery
-
 CELERY_BROKER_URL = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_TASK_SERIALIZER = 'pickle'
-
-
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_CACHE = 'django-cache'
 
