@@ -82,6 +82,6 @@ def exchange_meteologica_predictions():
         if uploaded_files > 0:
             files2exchange.filter(
                 name=file_type
-            ).update(last_upload=now() - timedelta(hours=1))
+            ).update(last_upload=now())
 
     return exchange_result
