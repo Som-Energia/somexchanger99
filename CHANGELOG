@@ -1,6 +1,9 @@
 ### CHANGELOG
 Historic of the changes of somexchanger99
 
+##### v0.3.3
+* deleted one hour offset in update precess in meteologica exchange
+
 ##### v0.3.2
 * Updated to last stable django version (4.1.7)
 * Added flower to monitorize task execution
