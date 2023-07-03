@@ -36,9 +36,8 @@ class ErpUtils(object):
 
         for e1 in e1s_objects:
             pas_ids = E101.search([('sw_id', '=', e1.id)])
-            if e1.polissa_ref_id and pas_ids:
+            if e1.state == 'done' and e1.polissa_ref_id and pas_ids:
                 steps = StepSwitching.search([('proces_id','=', e1_process_id)])
-
                 pas_id = pas_ids[0]
                 e101_step = sorted(steps)[0]
                 step_id = str( (e101_step, pas_id) )

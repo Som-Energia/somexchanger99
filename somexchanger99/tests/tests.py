@@ -28,7 +28,7 @@ def test__ErpUtils_get_objects_with_attachment():
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
@@ -44,7 +44,7 @@ def test__ErpUtils_get_e101_attachments__oneCase():
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
@@ -64,7 +64,7 @@ def test__ErpUtils_get_e101_attachments__manyCases():
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
@@ -84,10 +84,10 @@ def _test__ErpUtils_get_e101_attachments__manyCases_filterByDateRange():
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = datetime(2020, 10, 1, 1, 46, 22, tzinfo=timezone('CET'))
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
-    date_to = datetime(2020, 10, 2, 12, 00, 22, tzinfo=timezone('CET'))
+    date_to = datetime(2023, 10, 2, 12, 00, 22, tzinfo=timezone('CET'))
 
     attachments = erp.generate_e101_attachments(model=model, date=date, process=process, step=step)
 
@@ -105,7 +105,7 @@ def _test__ErpUtils_get_e101_attachments__oneCase__EmptyStep():
     erp = erp_utils.ErpUtils()
 
     model = 'giscedata.switching'
-    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
@@ -116,7 +116,7 @@ def _test__ErpUtils_get_e101_attachments__oneCase__EmptyStep():
 def test__ErpUtils_get_attachments__E101():
 
     model = 'giscedata.switching'
-    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '01'
 
@@ -137,10 +137,10 @@ def test__ErpUtils_get_attachments__E101():
 def test__ErpUtils_get_attachments__notE101():
 
     model = 'giscedata.switching'
-    date = datetime(2020, 10, 1, 7, 46, 22, tzinfo=timezone('CET'))
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
     process = 'E1'
     step = '02'
-    date_to = datetime(2020, 10, 4, 7, 46, 22, tzinfo=timezone('CET'))
+    date_to = datetime(2023, 10, 4, 7, 46, 22, tzinfo=timezone('CET'))
 
     attachment_result = get_attachments(model=model, date=date, process=process, step=step, date_to=date_to)
     assert 'attachments' in attachment_result
@@ -185,6 +185,29 @@ def _test__ErpUtils_action_exportar_xml():
     e101_xml_content = base64.decodebytes(e101_xml.encode()).decode()
 
     assert erp != None
+
+def test__ErpUtils_get_objects_with_attachment_E1_open():
+    erp = erp_utils.ErpUtils()
+
+    model = 'giscedata.switching'
+    date = datetime(2022, 12, 31, 7, 46, 22, tzinfo=timezone('CET'))
+    process = 'E1'
+    step = '01'
+
+    # Given E1 objects
+    e1s_objects = erp._get_objects_with_attachment(
+        model, date, process=process, step=step, date_to=None
+    )
+
+    # Get CUPs for the ones that are are opened
+    open_cups = [e1.cups_input for e1 in e1s_objects if e1.state == 'open']
+
+    # Get all attachments to send
+    attachments = erp.generate_e101_attachments(model=model, date=date, process=process, step=step)
+    cups_in_attachments = [att['name'].split('_')[3].split('.')[0] for att in attachments]
+
+    # Check if attachments are send only if E1 process is not open
+    assert open_cups not in cups_in_attachments
 
 
 @pytest.mark.skip(reason="To refactor")
