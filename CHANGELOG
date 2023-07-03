@@ -1,6 +1,9 @@
 ### CHANGELOG
 Historic of the changes of somexchanger99
 
+##### v0.3.4
+* fixed e101 importation when case is not yet closed 
+
 ##### v0.3.3
 * deleted one hour offset in update precess in meteologica exchange
 
