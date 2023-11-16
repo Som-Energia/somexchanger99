@@ -1,0 +1,13 @@
+Hola bandarres
+
+sembla que fent la tasca {{ task_name }} ha ocorregut el següent error:
+
+{{ task_error }}
+
+Podeu tornar a intentar-ho fent click aqui: {{ task_url }}
+
+Em sap greu (｡•́︿•̀｡)
+
+Salutacions,
+Your lovely SomExchanger99 <3
+
