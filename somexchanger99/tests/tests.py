@@ -10,6 +10,8 @@ from pytz import timezone
 from somexchanger99 import erp_utils, sftp_utils
 from somexchanger99.utils import get_attachments
 from somexchanger99.models import Curve2Exchange, File2Exchange
+from somexchanger99.notifications import notify
+
 
 def test_pytest_ok():
     assert 'foo' != 'bar'
@@ -78,6 +80,10 @@ def test__ErpUtils_get_e101_attachments__manyCases():
 
         assert 'MensajeSolicitudDesistimiento' in e101_xml_content
 
+def test__notifications_notify():
+
+    notify()
+
 # TODO erppeek seems to not filter correctly the dates, we tested calling browse directly filtering by date
 def _test__ErpUtils_get_e101_attachments__manyCases_filterByDateRange():
 
@@ -121,7 +127,7 @@ def test__ErpUtils_get_attachments__E101():
     step = '01'
 
     attachment_result = get_attachments(model=model, date=date, process=process, step=step)
- 
+
     assert 'attachments' in attachment_result
 
     attachments = attachment_result['attachments']
@@ -150,7 +156,7 @@ def test__ErpUtils_get_attachments__notE101():
     assert attachments != []
     for attachment in attachments:
         xml_content = base64.decodebytes(attachment['datas'].encode()).decode()
-        
+
         assert 'MensajeSolicitudDesistimiento' not in xml_content
 
 def _test__ErpUtils_action_exportar_xml():
@@ -166,10 +172,10 @@ def _test__ErpUtils_action_exportar_xml():
     swe101 = erp._client.model('giscedata.switching.e1.01')
     pas_id = swe101.search([('sw_id', '=', e1_id)])[0]
 
-    
+
     e101_step = sorted(steps)[0]
     switching_wizard = erp._client.model('giscedata.switching.wizard')
-    
+
     step_id = str( (e101_step, pas_id) )
     print(step_id)
 

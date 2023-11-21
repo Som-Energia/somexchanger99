@@ -7,6 +7,7 @@ from .models import Atr2Exchange, Curve2Exchange, File2Exchange
 from .sftp_utils import SftpUtils
 from .utils import (get_attachments, get_curves, get_meteologica_files,
                     push_curves, push_meteologica_files, send_attachments)
+from .notifications import notify
 
 
 def exchange_xmls():
@@ -37,6 +38,9 @@ def exchange_xmls():
 
     atrs_to_exchange.update(last_upload=now())
     sftp.close_connection()
+
+    notify(exchange_result)
+
     return exchange_result
 
 
