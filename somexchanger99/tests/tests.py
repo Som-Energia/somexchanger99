@@ -81,8 +81,12 @@ def test__ErpUtils_get_e101_attachments__manyCases():
         assert 'MensajeSolicitudDesistimiento' in e101_xml_content
 
 def test__notifications_notify():
+    results = {'fake_process' : 'fake_result'}
+    # we're effectively testing no exception
+    with patch('somexchanger99.notifications.mail_admins', return_value = True):
+        mail_ok = notify(results)
 
-    notify()
+    assert mail_ok
 
 # TODO erppeek seems to not filter correctly the dates, we tested calling browse directly filtering by date
 def _test__ErpUtils_get_e101_attachments__manyCases_filterByDateRange():
