@@ -1,8 +1,14 @@
 Hola bandarres
 
-sembla que fent la tasca {{ task_name }} ha ocorregut el següent error:
 
-{{ task_error }}
+
+sembla que fent les tasques següents han ocorregut el següents errors:
+
+{# for task_result in task_results  #}
+    {{ task_result.task_name }}
+    {{ task_result.task_error }}
+{# endfor #}
+
 
 Podeu tornar a intentar-ho fent click aqui: {{ task_url }}
 

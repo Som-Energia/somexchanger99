@@ -1,6 +1,7 @@
 import base64
 import os
 from datetime import datetime, timedelta
+from collections import namedtuple
 
 import paramiko
 import sentry_sdk
@@ -15,6 +16,8 @@ from .sftp_utils import SftpUtils, SftpUploadException
 ERP = ErpUtils()
 
 logger = get_task_logger(__name__)
+
+SomExchangerError = namedtuple("SomExchangerError", ["code", "reason", "message"])
 
 
 def get_attachments(model, date, process, **kwargs):
@@ -53,11 +56,16 @@ def get_attachments(model, date, process, **kwargs):
             msg="Ieeep! an error happened getting attachments from ",
             proces="%s ",
             step="step %s " if step else "%s",
-            resoon="reason: %s"
+            reason="reason: %s"
         )
         logger.exception(msg, model, step, str(e))
         sentry_sdk.capture_exception(e)
         attachments_result["attachments"] = []
+        attachments_result["error"] = {
+            "code": "ATTACHMENT_ERROR",
+            "reason": e.with_traceback(),
+            "message": msg.format(model, step, str(e))
+        }
     else:
         attachments_result['attachments'] = attachments
     finally:
@@ -251,3 +259,4 @@ def push_meteologica_files(files2upload):
     meteo_ftp.close_connection()
     enexpa_sftp.close_connection()
     return upload_result
+
