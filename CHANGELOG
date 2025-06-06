@@ -1,6 +1,9 @@
 ### CHANGELOG
 Historic of the changes of somexchanger99
 
+##### unreleased
+- fix stopping process when connection failure
+
 ##### v0.3.4
 * fixed e101 importation when case is not yet closed 
 

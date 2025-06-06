@@ -143,18 +143,20 @@ def get_curves(curve):
         logger.info("Getting %s curves from %s", curve.name, provider['host'])
         try:
             sftp = get_conn(provider)
-            files_to_download = sftp.get_files_to_download(
-                path=provider['root_dir'],
-                pattern=curve.pattern,
-                date_from=curve.last_upload or timezone.now() - timedelta(days=1)
-            )
-            logger.debug("Files found from %s: %s", provider['host'], str(files_to_download))
-            files_to_exchange[provider['name']] = files_to_download
+            if sftp:
+                files_to_download = sftp.get_files_to_download(
+                    path=provider['root_dir'],
+                    pattern=curve.pattern,
+                    date_from=curve.last_upload or timezone.now() - timedelta(days=1)
+                )
+                logger.debug("Files found from %s: %s", provider['host'], str(files_to_download))
+                files_to_exchange[provider['name']] = files_to_download
         except Exception as e:
             msg = "An uncontroled error happened getting curves from: "\
                   "%s, reason: %s"
             logger.exception(msg, provider['id'], str(e))
             sentry_sdk.capture_exception(e)
+            continue
         finally:
             if sftp:
                 sftp.close_connection()
@@ -185,20 +187,22 @@ def push_curves(curve2exchange, curves_files):
             try:
                 if curves_files.get(provider['name']):
                     sftp = get_conn(provider)
-                    for path, filename in curves_files[provider['name']]:
-                        content_file = sftp.download_file_content(path)
-                        logger.info("Uploading file %s to exchange sftp", filename)
-                        neuro_sftp.upload_file(
-                            content_file,
-                            filename,
-                            os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
-                        )
-                        num_exchange_files += 1
+                    if sftp:
+                        for path, filename in curves_files[provider['name']]:
+                            content_file = sftp.download_file_content(path)
+                            logger.info("Uploading file %s to exchange sftp", filename)
+                            neuro_sftp.upload_file(
+                                content_file,
+                                filename,
+                                os.path.join(neuro_sftp._base_remote_dir, str(datetime.now().date()))
+                            )
+                            num_exchange_files += 1
             except Exception as e:
                 msg = "An uncontroled error happened during uploading "\
                       "process, reason: %s"
                 logger.exception(msg, str(e))
                 sentry_sdk.capture_exception(e)
+                continue
             finally:
                 upload_result[provider['name']] = num_exchange_files
                 if sftp:
