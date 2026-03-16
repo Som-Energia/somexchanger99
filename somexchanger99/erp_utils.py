@@ -103,13 +103,13 @@ class ErpUtils(object):
 
     def get_sftp_providers(self):
         Provider = self._client.model('tg.comer.provider')
-        TgSFTP = self._client.model('tg.sftp')
+        TgSFTP = self._client.model('giscedata.sftp.connections')
 
         provider_ids = Provider.search([])
         providers = Provider.read(provider_ids)
 
         return [
-            TgSFTP.read(provider['sftp'][0])
+            TgSFTP.read(provider['sftp_id'][0])
             for provider in providers if provider['enabled']
         ]
 
