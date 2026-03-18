@@ -108,7 +108,7 @@ def send_attachments(sftp, object_attachment, when):
 def get_conn(provider):
     try:
         conn = SftpUtils(
-            host=provider['host'],
+            host=provider['ip_address'],
             port=provider['port'],
             username=provider['user'],
             password=provider.get('password') or '',
@@ -116,7 +116,7 @@ def get_conn(provider):
         )
     except paramiko.ssh_exception.SSHException:
         conn = FtpUtils(
-            host=provider['host'],
+            host=provider['ip_address'],
             username=provider['user'],
             password=provider.get('password') or '',
             base_dir=provider['root_dir']
@@ -140,7 +140,7 @@ def get_curves(curve):
 
     providers_sftp = erp_utils.get_sftp_providers()
     for provider in providers_sftp:
-        logger.info("Getting %s curves from %s", curve.name, provider['host'])
+        logger.info("Getting %s curves from %s", curve.name, provider['name'])
         try:
             sftp = get_conn(provider)
             files_to_download = sftp.get_files_to_download(
@@ -148,7 +148,7 @@ def get_curves(curve):
                 pattern=curve.pattern,
                 date_from=curve.last_upload or timezone.now() - timedelta(days=1)
             )
-            logger.debug("Files found from %s: %s", provider['host'], str(files_to_download))
+            logger.debug("Files found from %s: %s", provider['name'], str(files_to_download))
             files_to_exchange[provider['name']] = files_to_download
         except Exception as e:
             msg = "An uncontroled error happened getting curves from: "\
