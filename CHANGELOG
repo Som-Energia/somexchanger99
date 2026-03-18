@@ -1,6 +1,9 @@
 ### CHANGELOG
 Historic of the changes of somexchanger99
 
+##### v0.3.5
+* fixed utils to erp 25.5 changes
+
 ##### v0.3.4
 * fixed e101 importation when case is not yet closed 
 
